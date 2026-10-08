@@ -27,11 +27,11 @@ Browser checks use synthetic financial data in isolated Playwright sessions. Gen
 
 ## User-reported device check
 
-- 9 October 2026 (Asia/Bangkok): the user reports that the production website opens normally on Android. Device model and browser were not specified. This confirms basic access only; data entry, reload persistence, offline use, and installation have not been reported as tested on that device.
+- 9 October 2026 (Asia/Bangkok): the user reports that the production website opens normally on Android and, after the requested expense-entry/reload check, the data remains. Device model and browser were not specified. Offline use, installation, and persistence after closing/reopening the browser have not been reported as tested on that device.
 
 ## Not yet verified
 
-- Safari on an actual iPhone; the full Android flow, including browser identification, the on-screen keyboard, persistence, offline use, and installation/storage behavior. Viewport simulation is not device validation.
+- Safari on an actual iPhone; remaining Android checks, including browser identification, the on-screen keyboard, persistence after closing/reopening the browser, offline use, and installation/storage behavior. Viewport simulation is not device validation.
 - A 3–5-person trial over one income cycle; no usage or feedback results exist yet.
 
 These outstanding checks must not be reported as passed. See `IMPLEMENTATION_PLAN.md` sections 13–16 for the acceptance criteria.
