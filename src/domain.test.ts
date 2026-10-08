@@ -56,6 +56,13 @@ describe('เงินเหลือใช้และบิล', () => {
     expect(parseMoney('0.29')).toBe(29); expect(money(29)).toBe('0.29');
     for (const invalid of ['NaN', '1e3', '-10', '1.234', '1,000']) expect(() => parseMoney(invalid)).toThrow();
     expect(() => createSnapshot(10000, date, 0, date)).toThrow();
+    expect(() => createSnapshot(-1, addDays(date, 1), 0, date)).toThrow();
+    expect(() => createSnapshot(1, addDays(date, 1), -1, date)).toThrow();
+  });
+  it('ปฏิเสธผลรวมที่เกิน safe integer แม้แต่ละรายการถูกต้อง', () => {
+    const state = fixture();
+    state.entries = [state.entries[0], ...Array.from({ length: 10000 }, (_, i) => ({ id: `large-${i}`, kind: 'income' as const, amount: 1_000_000_000_000, date, note: 'รายรับ' }))];
+    expect(() => validateSnapshot(state)).toThrow();
   });
 });
 describe('ข้อมูลสำรองและพื้นที่เก็บข้อมูล', () => {
@@ -64,6 +71,8 @@ describe('ข้อมูลสำรองและพื้นที่เก�
     const store = memory(); const state = persist('personal', fixture(), null, store);
     expect(load('personal', store)).toEqual(state); expect(load('sample', store)).toBeNull();
     expect(importBackup(exportBackup(state))).toEqual(state);
+    expect(importBackup(JSON.stringify({ app: 'leua-use', backupVersion: 1, data: state }))).toEqual(state);
+    expect(JSON.parse(exportBackup(state)).app).toBe('pora');
   });
   it('ปฏิเสธไฟล์ผิดเวอร์ชัน ผิดชนิดข้อมูล และบิลที่เชื่อมไม่ครบ', () => {
     expect(() => importBackup('not json')).toThrow();

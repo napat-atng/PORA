@@ -28,14 +28,20 @@ export function parseMoney(value: string, signed = false): number {
   return amount;
 }
 export function budget(state: Snapshot, currentDate = today()) {
-  const balance = state.entries.reduce((sum, entry) => sum + entry.amount, 0);
+  const sumMoney = (values: number[]) => values.reduce((sum, value) => {
+    const next = sum + value;
+    if (!Number.isSafeInteger(next)) throw new Error('ยอดรวมเกินขอบเขตที่รองรับ');
+    return next;
+  }, 0);
+  const balance = sumMoney(state.entries.map(entry => entry.amount));
   const pending = state.bills.filter(b => !b.paidEntryId && b.due < state.nextIncomeDate);
-  const billTotal = pending.reduce((sum, b) => sum + b.amount, 0);
-  const available = balance - billTotal - state.reserved;
+  const billTotal = sumMoney(pending.map(b => b.amount));
+  const available = sumMoney([balance, -billTotal, -state.reserved]);
   const days = Math.max(0, daysBetween(currentDate, state.nextIncomeDate));
   return { balance, billTotal, available, days, daily: days > 0 && available >= 0 ? Math.floor(available / days) : null, pending };
 }
 export function createSnapshot(balance: number, nextIncomeDate: string, reserved: number, currentDate = today()): Snapshot {
+  if (!amount(balance) || balance < 0 || !amount(reserved) || reserved < 0 || !validDate(currentDate)) throw new Error('ยอดตั้งต้น เงินกันไว้ หรือวันที่ไม่ถูกต้อง');
   if (!validDate(nextIncomeDate) || nextIncomeDate <= currentDate) throw new Error('วันเงินเข้าต้องเป็นวันหลังจากวันนี้');
   return { version: 1, updatedAt: new Date().toISOString(), nextIncomeDate, reserved, entries: [{ id: id(), kind: 'opening', amount: balance, date: currentDate, note: 'ยอดตั้งต้น' }], bills: [] };
 }
