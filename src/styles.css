@@ -107,7 +107,8 @@ form > .primary { width: 100%; }
 .quick-notes button { background: #edf3ec; font-size: 12px; }
 .quick-notes button[aria-pressed=true] { background: #145b50; color: #fff; }
 .history-filters { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
-.date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.date-range { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.history-filters .field, .date-range .field { min-width: 0; }
 .history-day { padding: 18px 0; border-top: 1px solid #e2e9e3; }
 .history-day h2 { font-size: 14px; margin: 0; }
 .history-day h2 span { font-size: 11px; font-weight: 400; color: #687b73; margin-left: 8px; }
