@@ -46,7 +46,7 @@ export function SetupForm({ currentDate, onSave }: { currentDate: string; onSave
     <Field name="balance" label="เงินที่มีตอนนี้ (บาท)" errors={errors}><input id="balance" name="balance" inputMode="decimal" defaultValue="" placeholder="เช่น 5000" aria-describedby="balance-error" /></Field>
     <Field name="nextDate" label="วันเงินเข้าครั้งหน้า" errors={errors}><input id="nextDate" name="nextDate" type="date" min={addDays(currentDate, 1)} defaultValue={addDays(currentDate, 14)} aria-describedby="nextDate-error" /></Field>
     <Field name="reserved" label="เงินกันเพิ่มเติม (บาท)" errors={errors}><input id="reserved" name="reserved" inputMode="decimal" defaultValue="0" aria-describedby="reserved-error" /></Field>
-    <p className="hint">เงินกันเพิ่มเติมไม่รวมบิล คุณเพิ่มบิลได้หลังตั้งค่าเสร็จ</p>
+    <p className="hint">เงินที่ตั้งใจไม่ใช้ในรอบนี้ เช่น เงินสำรอง 1,000 บาท ไม่รวมบิลและไม่ใช่รายจ่าย คุณเพิ่มบิลได้หลังตั้งค่าเสร็จ</p>
     <Actions errors={errors} label="เริ่มวางแผนเงิน" />
   </form>;
 }
@@ -101,5 +101,5 @@ export function PlanForm({ state, currentDate, onSave }: { state: Snapshot; curr
   return <form onSubmit={submit} noValidate>
     <Field name="nextDate" label="วันเงินเข้าครั้งหน้า" errors={errors}><input id="nextDate" name="nextDate" type="date" min={addDays(currentDate, 1)} defaultValue={state.nextIncomeDate} aria-describedby="nextDate-error" /></Field>
     <Field name="reserved" label="เงินกันเพิ่มเติม (บาท)" errors={errors}><input id="reserved" name="reserved" inputMode="decimal" defaultValue={decimal(state.reserved)} aria-describedby="reserved-error" /></Field>
-    <p className="hint">การลดเงินกันไว้เป็นการเปลี่ยนแผน หากใช้เงินจริงให้บันทึกรายจ่ายด้วย</p><Actions errors={errors} label="บันทึกแผน" /></form>;
+    <p className="hint">เงินกันเพิ่มเติมคือเงินที่ตั้งใจไม่ใช้ในรอบนี้ เช่น เงินสำรอง 1,000 บาท ไม่รวมยอดบิล การลดเงินกันไว้เป็นการเปลี่ยนแผน หากใช้เงินจริงให้บันทึกรายจ่ายด้วย</p><Actions errors={errors} label="บันทึกแผน" /></form>;
 }
