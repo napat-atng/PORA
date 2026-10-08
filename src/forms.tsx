@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { addDays, id, parseMoney, validDate, type Bill, type Entry, type Snapshot } from './domain';
+import { addDays, id, money, parseMoney, validDate, type Bill, type Entry, type Snapshot } from './domain';
 
 class FieldError extends Error {
   constructor(public field: string, message: string) { super(message); }
@@ -94,6 +94,14 @@ export function ReconcileForm({ balance, onSave }: { balance: number; onSave: (a
   const { errors, submit } = useForm(data => onSave(amount(data, 'actual')));
   return <form onSubmit={submit} noValidate><p className="muted">เพิ่มเฉพาะผลต่างจากยอดเดิม ไม่เปลี่ยนสถานะบิล ถ้ายอดเท่าเดิมจะไม่เพิ่มรายการ</p>
     <Field name="actual" label="เงินที่มีจริงตอนนี้ (บาท)" errors={errors}><input id="actual" name="actual" inputMode="decimal" defaultValue={balance >= 0 ? decimal(balance) : ''} aria-describedby="actual-error" /></Field><Actions errors={errors} /></form>;
+}
+
+export function PayBillForm({ bill, currentDate, onSave }: { bill: Bill; currentDate: string; onSave: (paidDate: string) => void }) {
+  const { errors, submit } = useForm(data => onSave(date(data, 'paidDate', currentDate)));
+  return <form onSubmit={submit} noValidate><p><strong>{bill.title} · {money(bill.amount)} บาท</strong></p>
+    <p className="hint">ระบุวันที่จ่ายเงินจริง เลือกย้อนหลังได้ ระบบบันทึกรายจ่ายและนำบิลนี้ออกจากยอดกันไว้พร้อมกัน</p>
+    <Field name="paidDate" label="วันที่จ่ายเงินจริง" errors={errors}><input id="paidDate" name="paidDate" type="date" data-initial-focus max={currentDate} defaultValue={currentDate} aria-describedby="paidDate-error" /></Field>
+    <Actions errors={errors} label="ยืนยันบันทึกจ่ายบิล" /></form>;
 }
 
 export function PlanForm({ state, currentDate, onSave }: { state: Snapshot; currentDate: string; onSave: (nextDate: string, reserved: number) => void }) {

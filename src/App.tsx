@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDownLeft, ArrowUpRight, ChartNoAxesCombined, ChevronRight, CircleHelp, List, Plus, Receipt, Settings, Wallet, X } from 'lucide-react';
 import { addDays, budget, createSnapshot, dateLabel, money, payBill, reconcile, removeBill, removeEntry, saveBill, saveEntry, today, undoBill, type Bill, type Entry, type Mode, type Snapshot } from './domain';
-import { BillForm, EntryForm, PlanForm, ReconcileForm, SetupForm } from './forms';
+import { BillForm, EntryForm, PayBillForm, PlanForm, ReconcileForm, SetupForm } from './forms';
 import { BackupControls } from './BackupControls';
 import { useBudgetStorage } from './useBudgetStorage';
 import { PwaStatus } from './PwaStatus';
 
 type Page = 'overview' | 'entries' | 'bills' | 'settings';
-type Editor = { kind: 'setup' } | { kind: 'entry'; entry?: Entry; initialKind?: 'expense' | 'income' } | { kind: 'bill'; bill?: Bill } | { kind: 'reconcile' } | { kind: 'plan' };
+type Editor = { kind: 'setup' } | { kind: 'entry'; entry?: Entry; initialKind?: 'expense' | 'income' } | { kind: 'bill'; bill?: Bill } | { kind: 'payment'; bill: Bill } | { kind: 'reconcile' } | { kind: 'plan' };
 const pages = [{ id: 'overview' as const, label: 'ภาพรวม', icon: ChartNoAxesCombined }, { id: 'entries' as const, label: 'รายการเงิน', icon: List }, { id: 'bills' as const, label: 'บิล', icon: Receipt }, { id: 'settings' as const, label: 'ตั้งค่า', icon: Settings }];
 const entryNames = { opening: 'ยอดตั้งต้น', income: 'รายรับ', expense: 'รายจ่าย', adjustment: 'ปรับยอด' };
 
@@ -32,6 +32,7 @@ export default function App() {
   const [editor, setEditorState] = useState<Editor | null>(null);
   const [editorDirty, setEditorDirty] = useState(false);
   const [notice, setNotice] = useState('');
+  const [undoPayment, setUndoPayment] = useState<{ mode: Mode; billId: string; entryId: string } | null>(null);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   const [settingsDraft, setSettingsDraftState] = useState(false);
@@ -70,7 +71,7 @@ export default function App() {
     document.addEventListener('visibilitychange', refresh);
     return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
   }, []);
-  function commit(next: Snapshot) { storage.save(next, mode); setRevision(value => value + 1); setSettingsDraft(false); setNotice('บันทึกแล้ว'); setError(''); setEditor(null); }
+  function commit(next: Snapshot, message = 'บันทึกแล้ว') { storage.save(next, mode); setUndoPayment(null); setRevision(value => value + 1); setSettingsDraft(false); setNotice(message); setError(''); setEditor(null); }
   function reload() {
     const latest = storage.reload();
     setError('');
@@ -81,6 +82,7 @@ export default function App() {
   const result = state ? budget(state, currentDate) : null;
   const entries = state ? state.entries.map((entry, index) => ({ entry, index })).sort((a, b) => b.entry.date.localeCompare(a.entry.date) || b.index - a.index).map(item => item.entry) : [];
   const bills = state ? [...state.bills].sort((a, b) => a.due.localeCompare(b.due)) : [];
+  const canUndoPayment = !!undoPayment && mode === undoPayment.mode && state?.bills.some(bill => bill.id === undoPayment.billId && bill.paidEntryId === undoPayment.entryId);
 
   function renderEntries(items: Entry[]) {
     return items.length ? <ul className="item-list">{items.map(entry => <li key={entry.id}>
@@ -94,7 +96,7 @@ export default function App() {
       <span className="item-icon"><Receipt size={20} /></span><div className="item-body"><strong>{bill.title}</strong><small>ครบกำหนด {dateLabel(bill.due)}</small>
       <span className={`badge ${!bill.paidEntryId && bill.due < currentDate ? 'warning' : ''}`}>{bill.paidEntryId ? 'จ่ายแล้ว' : bill.due < currentDate ? 'เกินกำหนด · ค้างจ่าย' : bill.due >= state!.nextIncomeDate ? 'บิลรอบถัดไป' : 'ค้างจ่าย · กันไว้รอบนี้'}</span>
       <div className="item-actions"><button onClick={() => setEditor({ kind: 'bill', bill })} aria-label={`แก้ไขบิล ${bill.title}`}>แก้ไข</button><button className="danger-text" onClick={() => { if (window.confirm(bill.paidEntryId ? 'ลบบิลนี้และรายจ่ายที่เชื่อมกัน การจ่ายจะถูกย้อนและยอดเงินเปลี่ยน ยืนยันหรือไม่?' : 'ลบบิลนี้ ยืนยันหรือไม่?')) act(() => commit(removeBill(state!, bill.id))); }} aria-label={`ลบบิล ${bill.title}`}>ลบ</button></div></div>
-      <div className="bill-end"><strong>{money(bill.amount)}</strong><button className={bill.paidEntryId ? 'secondary small' : 'primary small'} onClick={() => act(() => commit(bill.paidEntryId ? undoBill(state!, bill.id) : payBill(state!, bill.id, currentDate)))} aria-label={`${bill.paidEntryId ? 'ย้อนการจ่าย' : 'จ่ายแล้ว'} ${bill.title}`}>{bill.paidEntryId ? 'ย้อนการจ่าย' : 'จ่ายแล้ว'}</button></div>
+      <div className="bill-end"><strong>{money(bill.amount)}</strong><button className={bill.paidEntryId ? 'secondary small' : 'primary small'} onClick={() => bill.paidEntryId ? act(() => commit(undoBill(state!, bill.id), 'ย้อนการจ่ายบิลแล้ว')) : setEditor({ kind: 'payment', bill })} aria-label={`${bill.paidEntryId ? 'ย้อนการจ่าย' : 'จ่ายแล้ว'} ${bill.title}`}>{bill.paidEntryId ? 'ย้อนการจ่าย' : 'จ่ายแล้ว'}</button></div>
     </li>)}</ul> : <div className="empty"><Receipt size={30} /><p>ไม่มีบิลในส่วนนี้</p><button onClick={() => setEditor({ kind: 'bill' })}>เพิ่มบิล</button></div>;
   }
 
@@ -106,7 +108,7 @@ export default function App() {
     <main onInputCapture={event => { if (page === 'settings' && (event.target as HTMLElement).closest('form')) setSettingsDraft(true); }}>
       <div className="topbar"><span>แผนเงินของคุณ</span><span>{dateLabel(currentDate)}</span></div>
       {mode === 'sample' && <div className="sample-banner"><strong>โหมดตัวอย่าง · ข้อมูลสมมติ</strong><button onClick={() => { openMode('personal'); }}>กลับไปข้อมูลของฉัน <ChevronRight size={16} /></button></div>}
-      <div role="status" className={notice ? 'notice' : 'sr-only'}>{notice}</div><div role="alert" className={error ? 'error-banner' : 'sr-only'}>{error}</div>
+      <div role="status" className={notice || canUndoPayment ? 'notice' : 'sr-only'}>{notice || (canUndoPayment ? 'บันทึกจ่ายบิลแล้ว' : '')}{canUndoPayment && <button onClick={() => act(() => commit(undoBill(state!, undoPayment!.billId), 'ย้อนการจ่ายบิลแล้ว'))}>ย้อนกลับ</button>}</div><div role="alert" className={error ? 'error-banner' : 'sr-only'}>{error}</div>
       {(storage.issue || storage.conflict) && <div className="error-banner" role="alert"><p>{storage.issue || 'ข้อมูลเปลี่ยนในอีกแท็บ โหลดข้อมูลล่าสุดก่อนบันทึกต่อ ฟอร์มที่เปิดอยู่จะยังเก็บค่าที่กรอกไว้'}</p><button className="secondary" onClick={reload}>โหลดข้อมูลล่าสุด</button></div>}
       {!state ? <><section className="welcome"><span className="eyebrow">PORA · พอร่า</span><h1>เห็นเงินเหลือ<br />ก่อนใช้จริง<span className="dot">.</span></h1><p>หลังกันบิลและเงินที่อยากเก็บแล้ว<br />เหลือใช้เท่าไรจนถึงเงินเข้าครั้งหน้า?</p><div className="welcome-actions"><button className="primary" disabled={!!storage.issue} onClick={() => { const loaded = activate('personal', currentDate); if (!loaded.state && !loaded.issue) setEditor({ kind: 'setup' }); }}>เริ่มใช้ข้อมูลของฉัน <ChevronRight size={20} /></button><button className="secondary" onClick={() => { openMode('sample'); }}>ลองด้วยข้อมูลตัวอย่าง</button></div><p className="privacy-note">ไม่ต้องสมัครสมาชิก · ไม่มีการเชื่อมธนาคาร<br />ข้อมูลเก็บในเบราว์เซอร์นี้ ไม่ซิงก์ข้ามเครื่อง</p><div className="welcome-visual" aria-hidden="true"><Wallet size={64} /><span>รู้ยอดก่อนใช้<br /><strong>วางแผนได้ทุกวัน</strong></span></div></section>{storage.issue && <BackupControls state={null} mode={mode} onImport={commit} onClear={() => { storage.clear(); setNotice('ล้างข้อมูลโหมดนี้แล้ว'); }} onNotice={setNotice} />}</> : <>
         <header className="page-header"><div><span className="eyebrow">{page === 'overview' ? 'วันนี้ วางแผนได้' : 'จัดการแผนของคุณ'}</span><h1>{pages.find(item => item.id === page)!.label}</h1></div>{page !== 'settings' && <div className="header-actions">{page !== 'bills' && <button className="secondary" onClick={() => setEditor({ kind: 'entry', initialKind: 'income' })}>เพิ่มรายรับ</button>}<button className="primary" onClick={() => setEditor({ kind: page === 'bills' ? 'bill' : 'entry' })}><Plus size={20} />{page === 'bills' ? 'เพิ่มบิล' : 'เพิ่มรายจ่าย'}</button></div>}</header>
@@ -124,11 +126,17 @@ export default function App() {
       </>}
       <PwaStatus hasDraft={!!editor || (page === 'settings' && settingsDraft)} />
     </main>
-    {editor && <Dialog title={editor.kind === 'setup' ? 'เริ่มแผนของคุณ' : editor.kind === 'entry' ? editor.entry ? 'แก้ไขรายการเงิน' : 'เพิ่มรายการเงิน' : editor.kind === 'bill' ? editor.bill ? 'แก้ไขบิล' : 'เพิ่มบิล' : editor.kind === 'reconcile' ? 'ปรับยอดเงินจริง' : 'ปรับแผนรับเงิน'} onClose={closeEditor} onDirty={() => setEditorDirty(true)}>
+    {editor && <Dialog title={editor.kind === 'setup' ? 'เริ่มแผนของคุณ' : editor.kind === 'entry' ? editor.entry ? 'แก้ไขรายการเงิน' : 'เพิ่มรายการเงิน' : editor.kind === 'bill' ? editor.bill ? 'แก้ไขบิล' : 'เพิ่มบิล' : editor.kind === 'payment' ? 'บันทึกจ่ายบิล' : editor.kind === 'reconcile' ? 'ปรับยอดเงินจริง' : 'ปรับแผนรับเงิน'} onClose={closeEditor} onDirty={() => setEditorDirty(true)}>
       {storage.conflict && <div className="error-banner" role="alert">อีกแท็บเปลี่ยนข้อมูลแล้ว โหลดข้อมูลล่าสุดก่อนบันทึก ค่าที่กรอกจะยังอยู่ หากอีกแท็บล้างแผนนี้ ฟอร์มจะถูกปิด <button onClick={reload}>โหลดข้อมูลล่าสุด</button></div>}
       {editor.kind === 'setup' && <SetupForm currentDate={currentDate} onSave={(balance, nextDate, reserved) => commit(createSnapshot(balance, nextDate, reserved, currentDate))} />}
       {editor.kind === 'entry' && <EntryForm entry={editor.entry} initialKind={editor.initialKind} currentDate={currentDate} onDraft={() => setEditorDirty(true)} onSave={entry => commit(saveEntry(state!, entry))} />}
       {editor.kind === 'bill' && <BillForm bill={editor.bill} currentDate={currentDate} onSave={bill => commit(saveBill(state!, bill))} />}
+      {editor.kind === 'payment' && <PayBillForm bill={editor.bill} currentDate={currentDate} onSave={paidDate => {
+        const next = payBill(state!, editor.bill.id, paidDate);
+        const paid = next.bills.find(bill => bill.id === editor.bill.id)!;
+        commit(next, `บันทึกจ่ายบิล ${paid.title} ${money(paid.amount)} บาท · วันที่ ${dateLabel(paidDate)}`);
+        setUndoPayment({ mode, billId: paid.id, entryId: paid.paidEntryId! });
+      }} />}
       {editor.kind === 'reconcile' && <ReconcileForm balance={result!.balance} onSave={actual => commit(reconcile(state!, actual, currentDate))} />}
       {editor.kind === 'plan' && <PlanForm state={state!} currentDate={currentDate} onSave={(nextDate, reserved) => commit({ ...state!, nextIncomeDate: nextDate, reserved })} />}
     </Dialog>}
