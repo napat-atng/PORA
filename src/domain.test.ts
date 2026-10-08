@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, budget, createSnapshot, money, parseMoney, payBill, reconcile, removeBill, removeEntry, saveBill, saveEntry, today, undoBill, validateSnapshot } from './domain';
-import { exportBackup, importBackup, key, load, persist, type Store } from './storage';
+import { clearSnapshot, exportBackup, importBackup, key, load, persist, replaceSnapshot, type Store } from './storage';
 const date = today();
 const fixture = () => {
   const state = createSnapshot(500000, addDays(date, 10), 100000, date);
@@ -98,5 +98,25 @@ describe('ข้อมูลสำรองและพื้นที่เก�
     const store = memory(); const saved = persist('personal', fixture(), null, store);
     store.setItem(key('personal'), JSON.stringify(reconcile(saved, 600000)));
     expect(() => persist('personal', saved, saved, store)).toThrow('อีกแท็บ');
+  });
+  it('กู้ข้อมูลเสียได้เมื่อยืนยัน raw เดิม และไม่แตะอีกโหมด', () => {
+    const store = memory();
+    const sample = persist('sample', fixture(), null, store);
+    store.setItem(key('personal'), 'broken json');
+    const restored = replaceSnapshot('personal', fixture(), 'broken json', store);
+    expect(load('personal', store)).toEqual(restored);
+    expect(load('sample', store)).toEqual(sample);
+    clearSnapshot('personal', JSON.stringify(restored), store);
+    expect(load('personal', store)).toBeNull();
+    expect(load('sample', store)).toEqual(sample);
+  });
+  it('ไม่แทนที่หรือล้างข้อมูลใหม่จากอีกแท็บ', () => {
+    const store = memory(); const saved = persist('personal', fixture(), null, store);
+    const previous = JSON.stringify(saved);
+    const changed = reconcile(saved, 600000);
+    store.setItem(key('personal'), JSON.stringify(changed));
+    expect(() => replaceSnapshot('personal', saved, previous, store)).toThrow('อีกแท็บ');
+    expect(() => clearSnapshot('personal', previous, store)).toThrow('อีกแท็บ');
+    expect(load('personal', store)).toEqual(changed);
   });
 });

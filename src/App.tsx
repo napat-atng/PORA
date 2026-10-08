@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDownLeft, ArrowUpRight, ChartNoAxesCombined, ChevronRight, CircleHelp, List, Plus, Receipt, Settings, Wallet, X } from 'lucide-react';
-import { budget, createSample, createSnapshot, dateLabel, money, payBill, reconcile, removeBill, removeEntry, saveBill, saveEntry, today, undoBill, validateSnapshot, type Bill, type Entry, type Mode, type Snapshot } from './domain';
+import { budget, createSnapshot, dateLabel, money, payBill, reconcile, removeBill, removeEntry, saveBill, saveEntry, today, undoBill, type Bill, type Entry, type Snapshot } from './domain';
 import { BillForm, EntryForm, PlanForm, ReconcileForm, SetupForm } from './forms';
+import { BackupControls } from './BackupControls';
+import { useBudgetStorage } from './useBudgetStorage';
 
 type Page = 'overview' | 'entries' | 'bills' | 'settings';
 type Editor = { kind: 'setup' } | { kind: 'entry'; entry?: Entry } | { kind: 'bill'; bill?: Bill } | { kind: 'reconcile' } | { kind: 'plan' };
@@ -22,8 +24,8 @@ function Dialog({ title, onClose, children }: { title: string; onClose: () => vo
 }
 
 export default function App() {
-  const [state, setState] = useState<Snapshot | null>(null);
-  const [mode, setMode] = useState<Mode>('personal');
+  const storage = useBudgetStorage();
+  const { state, mode } = storage;
   const [page, setPage] = useState<Page>('overview');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [notice, setNotice] = useState('');
@@ -36,7 +38,13 @@ export default function App() {
     document.addEventListener('visibilitychange', refresh);
     return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
   }, []);
-  function commit(next: Snapshot) { setState(validateSnapshot(next, currentDate)); setNotice('บันทึกแล้ว'); setError(''); setEditor(null); }
+  function commit(next: Snapshot) { storage.save(next, mode); setNotice('บันทึกแล้ว'); setError(''); setEditor(null); }
+  function reload() {
+    const latest = storage.reload();
+    setError('');
+    if (!latest && editor) { setEditor(null); setNotice('ข้อมูลล่าสุดไม่มีแผนที่ใช้งานได้ จึงปิดฟอร์มเดิม กรุณาตั้งค่าใหม่หรือนำเข้าไฟล์สำรอง'); }
+    else setNotice('โหลดข้อมูลล่าสุดแล้ว ฟอร์มที่เปิดอยู่ยังเก็บค่าที่กรอกไว้');
+  }
   function act(action: () => void) { try { action(); } catch (cause) { setError(cause instanceof Error ? cause.message : 'ทำรายการไม่สำเร็จ'); } }
   const result = state ? budget(state, currentDate) : null;
   const entries = state ? [...state.entries].sort((a, b) => b.date.localeCompare(a.date) || state.entries.indexOf(b) - state.entries.indexOf(a)) : [];
@@ -65,9 +73,10 @@ export default function App() {
     </aside>
     <main>
       <div className="topbar"><span>แผนเงินของคุณ</span><span>{dateLabel(currentDate)}</span></div>
-      {mode === 'sample' && state && <div className="sample-banner"><strong>โหมดตัวอย่าง · ข้อมูลสมมติ</strong><button onClick={() => { setState(null); setMode('personal'); setNotice(''); setPage('overview'); }}>กลับไปข้อมูลของฉัน <ChevronRight size={16} /></button></div>}
+      {mode === 'sample' && <div className="sample-banner"><strong>โหมดตัวอย่าง · ข้อมูลสมมติ</strong><button onClick={() => { storage.activate('personal', currentDate); setNotice(''); setError(''); setPage('overview'); }}>กลับไปข้อมูลของฉัน <ChevronRight size={16} /></button></div>}
       <div role="status" className={notice ? 'notice' : 'sr-only'}>{notice}</div><div role="alert" className={error ? 'error-banner' : 'sr-only'}>{error}</div>
-      {!state ? <section className="welcome"><span className="eyebrow">PORA · พอร่า</span><h1>เห็นเงินเหลือ<br />ก่อนใช้จริง<span className="dot">.</span></h1><p>หลังกันบิลและเงินที่อยากเก็บแล้ว<br />เหลือใช้เท่าไรจนถึงเงินเข้าครั้งหน้า?</p><div className="welcome-actions"><button className="primary" onClick={() => { setMode('personal'); setEditor({ kind: 'setup' }); }}>เริ่มใช้ข้อมูลของฉัน <ChevronRight size={20} /></button><button className="secondary" onClick={() => { setMode('sample'); setState(createSample(currentDate)); setError(''); }}>ลองด้วยข้อมูลตัวอย่าง</button></div><p className="privacy-note">ไม่ต้องสมัครสมาชิก · ไม่มีการเชื่อมธนาคาร<br />ข้อมูลเก็บในเบราว์เซอร์นี้ ไม่ซิงก์ข้ามเครื่อง</p><div className="welcome-visual" aria-hidden="true"><Wallet size={64} /><span>รู้ยอดก่อนใช้<br /><strong>วางแผนได้ทุกวัน</strong></span></div></section> : <>
+      {(storage.issue || storage.conflict) && <div className="error-banner" role="alert"><p>{storage.issue || 'ข้อมูลเปลี่ยนในอีกแท็บ โหลดข้อมูลล่าสุดก่อนบันทึกต่อ ฟอร์มที่เปิดอยู่จะยังเก็บค่าที่กรอกไว้'}</p><button className="secondary" onClick={reload}>โหลดข้อมูลล่าสุด</button></div>}
+      {!state ? <><section className="welcome"><span className="eyebrow">PORA · พอร่า</span><h1>เห็นเงินเหลือ<br />ก่อนใช้จริง<span className="dot">.</span></h1><p>หลังกันบิลและเงินที่อยากเก็บแล้ว<br />เหลือใช้เท่าไรจนถึงเงินเข้าครั้งหน้า?</p><div className="welcome-actions"><button className="primary" disabled={!!storage.issue} onClick={() => { storage.activate('personal', currentDate); setEditor({ kind: 'setup' }); }}>เริ่มใช้ข้อมูลของฉัน <ChevronRight size={20} /></button><button className="secondary" onClick={() => { storage.activate('sample', currentDate); setError(''); }}>ลองด้วยข้อมูลตัวอย่าง</button></div><p className="privacy-note">ไม่ต้องสมัครสมาชิก · ไม่มีการเชื่อมธนาคาร<br />ข้อมูลเก็บในเบราว์เซอร์นี้ ไม่ซิงก์ข้ามเครื่อง</p><div className="welcome-visual" aria-hidden="true"><Wallet size={64} /><span>รู้ยอดก่อนใช้<br /><strong>วางแผนได้ทุกวัน</strong></span></div></section>{storage.issue && <BackupControls state={null} mode={mode} onImport={commit} onClear={() => { storage.clear(); setNotice('ล้างข้อมูลโหมดนี้แล้ว'); }} onNotice={setNotice} />}</> : <>
         <header className="page-header"><div><span className="eyebrow">{page === 'overview' ? 'วันนี้ วางแผนได้' : 'จัดการแผนของคุณ'}</span><h1>{pages.find(item => item.id === page)!.label}</h1></div>{page !== 'settings' && <button className="primary" onClick={() => setEditor({ kind: page === 'bills' ? 'bill' : 'entry' })}><Plus size={20} />{page === 'bills' ? 'เพิ่มบิล' : 'เพิ่มรายจ่าย'}</button>}</header>
         {page === 'overview' && result && <>
           <section className={`hero-card ${result.available < 0 ? 'deficit' : ''}`}><div className="hero-heading"><span>{result.available < 0 ? 'เงินไม่พอสำหรับแผนนี้' : 'เงินเหลือใช้จนถึงเงินเข้าครั้งหน้า'}</span><Wallet size={24} /></div><div className="hero-money">{result.available < 0 ? 'ขาดอีก ' : ''}{money(Math.abs(result.available))}<span>บาท</span></div><div className="hero-footer"><div><small>เฉลี่ยต่อวัน</small><strong>{result.daily === null ? 'ยังคำนวณไม่ได้' : `${money(result.daily)} บาท`}</strong></div><div><small>ถึง {dateLabel(state.nextIncomeDate)}</small><strong>เหลือ {result.days} วัน</strong></div></div><p>ตัวเลขจากแผนที่บันทึก ไม่ใช่ยอดสดจากธนาคารหรือการรับประกันการใช้จ่าย</p></section>
@@ -78,11 +87,12 @@ export default function App() {
         </>}
         {page === 'entries' && <><section className="panel balance-strip"><div><small>เงินปัจจุบัน</small><strong>{money(result!.balance)} บาท</strong></div><button className="secondary" onClick={() => setEditor({ kind: 'reconcile' })}>ปรับยอดให้ตรงกับเงินจริง</button></section><section className="panel">{renderEntries(entries)}</section></>}
         {page === 'bills' && <><section className="panel balance-strip"><div><small>เงินกันเพิ่มเติม</small><strong>{money(state.reserved)} บาท</strong></div><button className="secondary" onClick={() => setEditor({ kind: 'plan' })}>ปรับเงินกันไว้</button></section><section className="panel"><h2>บิลค้างรอบนี้</h2>{renderBills(bills.filter(b => !b.paidEntryId && b.due < state.nextIncomeDate))}</section><section className="panel"><h2>บิลรอบถัดไป</h2>{renderBills(bills.filter(b => !b.paidEntryId && b.due >= state.nextIncomeDate))}</section><section className="panel"><h2>บิลที่จ่ายแล้ว</h2>{renderBills(bills.filter(b => b.paidEntryId))}</section></>}
-        {page === 'settings' && <div className="settings-grid"><section className="panel"><h2>รอบรับเงินและเงินกันไว้</h2><PlanForm state={state} currentDate={currentDate} onSave={(nextDate, reserved) => commit({ ...state, nextIncomeDate: nextDate, reserved })} /></section><section className="panel"><h2>ข้อมูลของคุณอยู่ที่ไหน?</h2><p>ข้อมูลอยู่ในเบราว์เซอร์ของอุปกรณ์นี้ ไม่ใช่บัญชีออนไลน์ และไม่ซิงก์ข้ามเครื่อง</p><p>การล้างข้อมูลเว็บไซต์ ใช้โหมดส่วนตัว หรือเปลี่ยนเบราว์เซอร์และที่อยู่เว็บ อาจทำให้ข้อมูลหายหรือไม่ปรากฏ</p><p>ใครที่เข้าถึงเบราว์เซอร์นี้ได้อาจดูข้อมูลได้ เดโมยังไม่มี PIN ล็อกแอป</p><h2>เพิ่มลงหน้าจอหลัก</h2><p>iPhone: เปิดด้วย Safari → แชร์ → เพิ่มไปยังหน้าจอโฮม</p><p>Android: เปิดด้วย Chrome → เมนู → เพิ่มลงหน้าจอหลักหรือติดตั้งแอป</p><p className="hint">ความสามารถขึ้นกับเบราว์เซอร์ สำรองข้อมูลก่อนติดตั้งหรือเปลี่ยนเครื่อง บางอุปกรณ์อาจใช้พื้นที่เก็บข้อมูลแยกจากแท็บเดิม</p></section></div>}
+        {page === 'settings' && <div className="settings-grid"><div><section className="panel"><h2>รอบรับเงินและเงินกันไว้</h2><PlanForm state={state} currentDate={currentDate} onSave={(nextDate, reserved) => commit({ ...state, nextIncomeDate: nextDate, reserved })} /></section><BackupControls state={state} mode={mode} onImport={commit} onClear={() => { storage.clear(); setPage('overview'); setNotice('ล้างข้อมูลโหมดนี้แล้ว'); }} onNotice={setNotice} />{mode === 'personal' && <button className="secondary" onClick={() => { storage.activate('sample', currentDate); setPage('overview'); setNotice(''); }}>เปิดข้อมูลตัวอย่าง</button>}</div><section className="panel"><h2>ข้อมูลของคุณอยู่ที่ไหน?</h2><p>ข้อมูลอยู่ในเบราว์เซอร์ของอุปกรณ์นี้ ไม่ใช่บัญชีออนไลน์ และไม่ซิงก์ข้ามเครื่อง</p><p>การล้างข้อมูลเว็บไซต์ ใช้โหมดส่วนตัว หรือเปลี่ยนเบราว์เซอร์และที่อยู่เว็บ อาจทำให้ข้อมูลหายหรือไม่ปรากฏ</p><p>ใครที่เข้าถึงเบราว์เซอร์นี้ได้อาจดูข้อมูลได้ เดโมยังไม่มี PIN ล็อกแอป</p><h2>เพิ่มลงหน้าจอหลัก</h2><p>iPhone: เปิดด้วย Safari → แชร์ → เพิ่มไปยังหน้าจอโฮม</p><p>Android: เปิดด้วย Chrome → เมนู → เพิ่มลงหน้าจอหลักหรือติดตั้งแอป</p><p className="hint">ความสามารถขึ้นกับเบราว์เซอร์ สำรองข้อมูลก่อนติดตั้งหรือเปลี่ยนเครื่อง บางอุปกรณ์อาจใช้พื้นที่เก็บข้อมูลแยกจากแท็บเดิม</p></section></div>}
         <footer className="updated">อัปเดตล่าสุด {new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' }).format(new Date(state.updatedAt))} · ข้อมูล{mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}</footer>
       </>}
     </main>
     {editor && <Dialog title={editor.kind === 'setup' ? 'เริ่มแผนของคุณ' : editor.kind === 'entry' ? editor.entry ? 'แก้ไขรายการเงิน' : 'เพิ่มรายการเงิน' : editor.kind === 'bill' ? editor.bill ? 'แก้ไขบิล' : 'เพิ่มบิล' : editor.kind === 'reconcile' ? 'ปรับยอดเงินจริง' : 'ปรับแผนรับเงิน'} onClose={() => setEditor(null)}>
+      {storage.conflict && <div className="error-banner" role="alert">อีกแท็บเปลี่ยนข้อมูลแล้ว โหลดข้อมูลล่าสุดก่อนบันทึก ค่าที่กรอกจะยังอยู่ หากอีกแท็บล้างแผนนี้ ฟอร์มจะถูกปิด <button onClick={reload}>โหลดข้อมูลล่าสุด</button></div>}
       {editor.kind === 'setup' && <SetupForm currentDate={currentDate} onSave={(balance, nextDate, reserved) => commit(createSnapshot(balance, nextDate, reserved, currentDate))} />}
       {editor.kind === 'entry' && <EntryForm entry={editor.entry} currentDate={currentDate} onSave={entry => commit(saveEntry(state!, entry))} />}
       {editor.kind === 'bill' && <BillForm bill={editor.bill} currentDate={currentDate} onSave={bill => commit(saveBill(state!, bill))} />}
