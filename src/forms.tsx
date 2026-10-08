@@ -51,22 +51,24 @@ export function SetupForm({ currentDate, onSave }: { currentDate: string; onSave
   </form>;
 }
 
-export function EntryForm({ entry, currentDate, onSave }: { entry?: Entry; currentDate: string; onSave: (entry: Entry) => void }) {
-  const [kind, setKind] = useState(entry?.kind ?? 'expense');
+export function EntryForm({ entry, initialKind = 'expense', currentDate, onSave, onDraft }: { entry?: Entry; initialKind?: 'expense' | 'income'; currentDate: string; onSave: (entry: Entry) => void; onDraft?: () => void }) {
+  const [kind, setKind] = useState(entry?.kind ?? initialKind);
+  const [note, setNote] = useState(entry?.note ?? '');
   const { errors, submit } = useForm(data => {
-    const note = String(data.get('note')).trim();
-    if (!note || note.length > 150) throw new FieldError('note', 'ใส่หมายเหตุไม่เกิน 150 ตัวอักษร');
     const value = amount(data, 'amount', kind === 'adjustment', kind === 'income' || kind === 'expense');
-    onSave({ id: entry?.id ?? id(), kind, amount: kind === 'expense' ? -value : value, date: date(data, 'entryDate', currentDate), note, ...(entry?.billId ? { billId: entry.billId } : {}) });
+    const label = note.trim() || { expense: 'รายจ่าย', income: 'รายรับ', opening: 'ยอดตั้งต้น', adjustment: 'ปรับยอด' }[kind];
+    if (label.length > 150) throw new FieldError('note', 'ใส่หมายเหตุไม่เกิน 150 ตัวอักษร');
+    onSave({ id: entry?.id ?? id(), kind, amount: kind === 'expense' ? -value : value, date: date(data, 'entryDate', currentDate), note: label, ...(entry?.billId ? { billId: entry.billId } : {}) });
   });
   return <form onSubmit={submit} noValidate>
     <Field name="kind" label="ชนิดรายการ" errors={errors}><select id="kind" value={kind} onChange={event => setKind(event.target.value as Entry['kind'])} disabled={!!entry && (entry.kind === 'opening' || entry.kind === 'adjustment' || !!entry.billId)}>
       <option value="expense">รายจ่าย</option><option value="income">รายรับ</option>{entry?.kind === 'opening' && <option value="opening">ยอดตั้งต้น</option>}{entry?.kind === 'adjustment' && <option value="adjustment">ปรับยอด</option>}
     </select></Field>
     {entry?.billId && <p className="hint">รายการนี้เชื่อมกับบิล การแก้จำนวนเงินและหมายเหตุจะอัปเดตบิลด้วย</p>}
-    <Field name="amount" label="จำนวนเงิน (บาท)" errors={errors}><input id="amount" name="amount" inputMode={kind === 'adjustment' ? 'text' : 'decimal'} defaultValue={entry ? decimal(kind === 'adjustment' ? entry.amount : Math.abs(entry.amount)) : ''} aria-describedby="amount-error" /></Field>
+    <Field name="amount" label="จำนวนเงิน (บาท)" errors={errors}><input id="amount" name="amount" data-initial-focus inputMode={kind === 'adjustment' ? 'text' : 'decimal'} defaultValue={entry ? decimal(kind === 'adjustment' ? entry.amount : Math.abs(entry.amount)) : ''} aria-describedby="amount-error" /></Field>
     <Field name="entryDate" label="วันที่ได้รับหรือจ่ายเงินจริง" errors={errors}><input id="entryDate" name="entryDate" type="date" max={currentDate} defaultValue={entry?.date ?? currentDate} aria-describedby="entryDate-error" /></Field>
-    <Field name="note" label="หมายเหตุ" errors={errors}><input id="note" name="note" maxLength={150} defaultValue={entry?.note ?? ''} placeholder="เช่น อาหารกลางวัน" aria-describedby="note-error" /></Field>
+    <Field name="note" label="หมายเหตุ (ไม่จำเป็น)" errors={errors}><input id="note" name="note" maxLength={150} value={note} onChange={event => setNote(event.target.value)} placeholder="เว้นว่างได้ หรือเลือกข้อความด้านล่าง" aria-describedby="note-error" /></Field>
+    {(kind === 'expense' || kind === 'income') && <div className="quick-notes" role="group" aria-label="หมายเหตุที่ใช้บ่อย">{(kind === 'expense' ? ['อาหาร', 'เดินทาง', 'ซื้อของ', 'ค่าใช้จ่ายอื่น'] : ['เงินเดือน', 'รายได้เสริม', 'เงินคืน']).map(label => <button type="button" key={label} aria-pressed={note === label} onClick={() => { setNote(label); onDraft?.(); }}>{label}</button>)}</div>}
     <Actions errors={errors} />
   </form>;
 }

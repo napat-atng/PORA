@@ -7,7 +7,7 @@ import { useBudgetStorage } from './useBudgetStorage';
 import { PwaStatus } from './PwaStatus';
 
 type Page = 'overview' | 'entries' | 'bills' | 'settings';
-type Editor = { kind: 'setup' } | { kind: 'entry'; entry?: Entry } | { kind: 'bill'; bill?: Bill } | { kind: 'reconcile' } | { kind: 'plan' };
+type Editor = { kind: 'setup' } | { kind: 'entry'; entry?: Entry; initialKind?: 'expense' | 'income' } | { kind: 'bill'; bill?: Bill } | { kind: 'reconcile' } | { kind: 'plan' };
 const pages = [{ id: 'overview' as const, label: 'ภาพรวม', icon: ChartNoAxesCombined }, { id: 'entries' as const, label: 'รายการเงิน', icon: List }, { id: 'bills' as const, label: 'บิล', icon: Receipt }, { id: 'settings' as const, label: 'ตั้งค่า', icon: Settings }];
 const entryNames = { opening: 'ยอดตั้งต้น', income: 'รายรับ', expense: 'รายจ่าย', adjustment: 'ปรับยอด' };
 
@@ -17,6 +17,7 @@ function Dialog({ title, onClose, onDirty, children }: { title: string; onClose:
     const previous = document.activeElement as HTMLElement | null;
     const dialog = ref.current!;
     dialog.showModal();
+    dialog.querySelector<HTMLInputElement>('[data-initial-focus]')?.focus();
     return () => { dialog.close(); previous?.focus(); };
   }, []);
   return <dialog ref={ref} aria-labelledby="dialog-title" onInputCapture={onDirty} onCancel={event => { event.preventDefault(); onClose(); }}>
@@ -108,7 +109,7 @@ export default function App() {
       <div role="status" className={notice ? 'notice' : 'sr-only'}>{notice}</div><div role="alert" className={error ? 'error-banner' : 'sr-only'}>{error}</div>
       {(storage.issue || storage.conflict) && <div className="error-banner" role="alert"><p>{storage.issue || 'ข้อมูลเปลี่ยนในอีกแท็บ โหลดข้อมูลล่าสุดก่อนบันทึกต่อ ฟอร์มที่เปิดอยู่จะยังเก็บค่าที่กรอกไว้'}</p><button className="secondary" onClick={reload}>โหลดข้อมูลล่าสุด</button></div>}
       {!state ? <><section className="welcome"><span className="eyebrow">PORA · พอร่า</span><h1>เห็นเงินเหลือ<br />ก่อนใช้จริง<span className="dot">.</span></h1><p>หลังกันบิลและเงินที่อยากเก็บแล้ว<br />เหลือใช้เท่าไรจนถึงเงินเข้าครั้งหน้า?</p><div className="welcome-actions"><button className="primary" disabled={!!storage.issue} onClick={() => { const loaded = activate('personal', currentDate); if (!loaded.state && !loaded.issue) setEditor({ kind: 'setup' }); }}>เริ่มใช้ข้อมูลของฉัน <ChevronRight size={20} /></button><button className="secondary" onClick={() => { openMode('sample'); }}>ลองด้วยข้อมูลตัวอย่าง</button></div><p className="privacy-note">ไม่ต้องสมัครสมาชิก · ไม่มีการเชื่อมธนาคาร<br />ข้อมูลเก็บในเบราว์เซอร์นี้ ไม่ซิงก์ข้ามเครื่อง</p><div className="welcome-visual" aria-hidden="true"><Wallet size={64} /><span>รู้ยอดก่อนใช้<br /><strong>วางแผนได้ทุกวัน</strong></span></div></section>{storage.issue && <BackupControls state={null} mode={mode} onImport={commit} onClear={() => { storage.clear(); setNotice('ล้างข้อมูลโหมดนี้แล้ว'); }} onNotice={setNotice} />}</> : <>
-        <header className="page-header"><div><span className="eyebrow">{page === 'overview' ? 'วันนี้ วางแผนได้' : 'จัดการแผนของคุณ'}</span><h1>{pages.find(item => item.id === page)!.label}</h1></div>{page !== 'settings' && <button className="primary" onClick={() => setEditor({ kind: page === 'bills' ? 'bill' : 'entry' })}><Plus size={20} />{page === 'bills' ? 'เพิ่มบิล' : 'เพิ่มรายจ่าย'}</button>}</header>
+        <header className="page-header"><div><span className="eyebrow">{page === 'overview' ? 'วันนี้ วางแผนได้' : 'จัดการแผนของคุณ'}</span><h1>{pages.find(item => item.id === page)!.label}</h1></div>{page !== 'settings' && <div className="header-actions">{page !== 'bills' && <button className="secondary" onClick={() => setEditor({ kind: 'entry', initialKind: 'income' })}>เพิ่มรายรับ</button>}<button className="primary" onClick={() => setEditor({ kind: page === 'bills' ? 'bill' : 'entry' })}><Plus size={20} />{page === 'bills' ? 'เพิ่มบิล' : 'เพิ่มรายจ่าย'}</button></div>}</header>
         {page === 'overview' && result && <>
           <section className={`hero-card ${result.available < 0 ? 'deficit' : ''}`}><div className="hero-heading"><span>{result.available < 0 ? 'เงินไม่พอสำหรับแผนนี้' : 'เงินเหลือใช้จนถึงเงินเข้าครั้งหน้า'}</span><Wallet size={24} /></div><div className="hero-money">{result.available < 0 ? 'ขาดอีก ' : ''}{money(Math.abs(result.available))}<span>บาท</span></div><div className="hero-footer"><div><small>เฉลี่ยต่อวัน</small><strong>{result.daily === null ? 'ยังคำนวณไม่ได้' : `${money(result.daily)} บาท`}</strong></div><div><small>ถึง {dateLabel(state.nextIncomeDate)}</small><strong>เหลือ {result.days} วัน</strong></div></div><p>ตัวเลขจากแผนที่บันทึก ไม่ใช่ยอดสดจากธนาคารหรือการรับประกันการใช้จ่าย</p></section>
           {result.days === 0 && <div className="warning-banner">ถึงวันเงินเข้าแล้ว บันทึกรายรับเมื่อได้รับเงินจริง และตั้งรอบใหม่ <button onClick={() => setEditor({ kind: 'plan' })}>ตั้งรอบใหม่</button></div>}
@@ -126,7 +127,7 @@ export default function App() {
     {editor && <Dialog title={editor.kind === 'setup' ? 'เริ่มแผนของคุณ' : editor.kind === 'entry' ? editor.entry ? 'แก้ไขรายการเงิน' : 'เพิ่มรายการเงิน' : editor.kind === 'bill' ? editor.bill ? 'แก้ไขบิล' : 'เพิ่มบิล' : editor.kind === 'reconcile' ? 'ปรับยอดเงินจริง' : 'ปรับแผนรับเงิน'} onClose={closeEditor} onDirty={() => setEditorDirty(true)}>
       {storage.conflict && <div className="error-banner" role="alert">อีกแท็บเปลี่ยนข้อมูลแล้ว โหลดข้อมูลล่าสุดก่อนบันทึก ค่าที่กรอกจะยังอยู่ หากอีกแท็บล้างแผนนี้ ฟอร์มจะถูกปิด <button onClick={reload}>โหลดข้อมูลล่าสุด</button></div>}
       {editor.kind === 'setup' && <SetupForm currentDate={currentDate} onSave={(balance, nextDate, reserved) => commit(createSnapshot(balance, nextDate, reserved, currentDate))} />}
-      {editor.kind === 'entry' && <EntryForm entry={editor.entry} currentDate={currentDate} onSave={entry => commit(saveEntry(state!, entry))} />}
+      {editor.kind === 'entry' && <EntryForm entry={editor.entry} initialKind={editor.initialKind} currentDate={currentDate} onDraft={() => setEditorDirty(true)} onSave={entry => commit(saveEntry(state!, entry))} />}
       {editor.kind === 'bill' && <BillForm bill={editor.bill} currentDate={currentDate} onSave={bill => commit(saveBill(state!, bill))} />}
       {editor.kind === 'reconcile' && <ReconcileForm balance={result!.balance} onSave={actual => commit(reconcile(state!, actual, currentDate))} />}
       {editor.kind === 'plan' && <PlanForm state={state!} currentDate={currentDate} onSave={(nextDate, reserved) => commit({ ...state!, nextIncomeDate: nextDate, reserved })} />}

@@ -102,6 +102,10 @@ input:focus, select:focus { outline: 2px solid #528976; outline-offset: 1px; }
 form > .primary { width: 100%; }
 .settings-grid p { font-size: 13px; }
 .backup-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.header-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.quick-notes { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 18px; }
+.quick-notes button { background: #edf3ec; font-size: 12px; }
+.quick-notes button[aria-pressed=true] { background: #145b50; color: #fff; }
 .pwa-status { color: #687b73; font-size: 11px; margin-top: 24px; text-align: center; }
 .pwa-status .warning-banner { text-align: left; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
