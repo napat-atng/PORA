@@ -106,6 +106,12 @@ form > .primary { width: 100%; }
 .quick-notes { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 18px; }
 .quick-notes button { background: #edf3ec; font-size: 12px; }
 .quick-notes button[aria-pressed=true] { background: #145b50; color: #fff; }
+.history-filters { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+.date-range { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.history-day { padding: 18px 0; border-top: 1px solid #e2e9e3; }
+.history-day h2 { font-size: 14px; margin: 0; }
+.history-day h2 span { font-size: 11px; font-weight: 400; color: #687b73; margin-left: 8px; }
+@media (max-width: 760px) { .history-filters { grid-template-columns: 1fr 1fr; } .history-filters .field:first-child { grid-column: 1 / -1; } .header-actions .secondary { font-size: 12px; padding: 10px; } }
 .pwa-status { color: #687b73; font-size: 11px; margin-top: 24px; text-align: center; }
 .pwa-status .warning-banner { text-align: left; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
