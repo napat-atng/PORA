@@ -47,7 +47,15 @@ Safari บน iPhone: แชร์ → เพิ่มไปยังหน้�
 
 ปลายทางตามแผนคือ Cloudflare Pages แบบ static เท่านั้น สร้าง production build แล้วอัปโหลด **ไฟล์ภายใน `dist/`** โดยให้ `index.html` อยู่ที่ราก ใช้ชื่อโปรเจกต์ `pora-demo` หากว่าง และรักษาที่อยู่เดิมสำหรับผู้ทดลอง ไม่อัปโหลด source, `node_modules` หรือข้อมูลสำรองส่วนตัว ไม่เพิ่มบริการเสียเงิน ฐานข้อมูล หรือ Functions
 
-**ยังไม่มีลิงก์ production ที่ยืนยันแล้ว** หลังเผยแพร่ต้องตรวจ HTTPS, refresh, manifest, offline และการบันทึกบน origin จริง ก่อนบันทึกลิงก์ที่นี่
+เว็บทดลอง: **https://pora-demo.pages.dev** — เผยแพร่ 9 ตุลาคม 2569 (Asia/Bangkok) ตรวจ HTTPS, refresh, manifest, offline และการบันทึกบน origin จริงด้วย Chromium แล้ว ยังรอการตรวจบนมือถือจริง
+
+อัปเดตเว็บเดิมหลังตรวจงานและ build ผ่าน:
+
+```powershell
+npx.cmd wrangler pages deploy dist --project-name pora-demo --branch main
+```
+
+ใช้โปรเจกต์นี้ต่อเพื่อรักษา origin เดิม ไม่ต้องสร้างใหม่ การ push Git อย่างเดียวไม่เผยแพร่เว็บ เพราะโปรเจกต์ใช้ Direct Upload
 
 ## โครงสร้างและผลตรวจ
 
@@ -56,5 +64,6 @@ Safari บน iPhone: แชร์ → เพิ่มไปยังหน้�
 - `src/useBudgetStorage.ts`, `src/BackupControls.tsx`: session และการกู้ข้อมูล
 - `src/PwaStatus.tsx`, `vite.config.ts`, `public/`: PWA และไอคอน
 - [แผนงาน](IMPLEMENTATION_PLAN.md), [ผลตรวจและข้อจำกัด](TEST_REPORT.md), [แนวทาง contributor/agent](AGENTS.md)
+- [คู่มือทดลองกับผู้ใช้](TRIAL_GUIDE.md)
 
-ตรวจอัตโนมัติผ่านแล้ว แต่ยังต้องตรวจมือถือจริง เผยแพร่ และทดลองกับผู้ใช้ 3–5 คนหนึ่งรอบรับเงิน ห้ามนับการจำลอง viewport เป็นผลทดสอบมือถือจริง
+ตรวจอัตโนมัติและเผยแพร่แล้ว แต่ยังต้องตรวจมือถือจริง และทดลองกับผู้ใช้ 3–5 คนหนึ่งรอบรับเงิน ห้ามนับการจำลอง viewport เป็นผลทดสอบมือถือจริง

@@ -15,10 +15,19 @@ Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local prod
 
 Browser checks use synthetic financial data in isolated Playwright sessions. Generated screenshots, scripts, and backups are excluded from Git.
 
+## Production deployment
+
+- Published on 9 October 2026 (Asia/Bangkok): `https://pora-demo.pages.dev`.
+- Cloudflare Pages project: `pora-demo`; production branch: `main`; deployed source commit: `df944e5`.
+- Deployment ID: `0dd15869-0280-4eea-ace8-a5139895034f`; immutable URL: `https://0dd15869.pora-demo.pages.dev`.
+- HTTPS returns HTTP 200 with the PORA page title. A fresh isolated browser opens the welcome page without another user's data.
+- On the stable production origin, all 38 data/UI assertions and 8 offline/manifest/icon assertions pass (46 total). Browser console reports zero errors/warnings during these checks.
+- This is a static Direct Upload deployment of 11 files from `dist/`; no database, Functions, paid add-ons, or custom domain were provisioned. Git pushes do not trigger deployment.
+- Wrangler 4.149.0 initially delegated project creation to Workers and failed without deploying anything. Creating the Pages project directly with its `--force` option succeeded; subsequent upload used normal `wrangler pages deploy`.
+
 ## Not yet verified
 
 - Safari on an actual iPhone and Chrome on an actual Android device, including the on-screen keyboard and installation/storage behavior. Viewport simulation is not device validation.
-- Cloudflare Pages publication and checks on its actual HTTPS origin.
 - A 3–5-person trial over one income cycle; no usage or feedback results exist yet.
 
 These outstanding checks must not be reported as passed. See `IMPLEMENTATION_PLAN.md` sections 13–16 for the acceptance criteria.
