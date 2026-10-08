@@ -4,6 +4,7 @@ import { budget, createSnapshot, dateLabel, money, payBill, reconcile, removeBil
 import { BillForm, EntryForm, PlanForm, ReconcileForm, SetupForm } from './forms';
 import { BackupControls } from './BackupControls';
 import { useBudgetStorage } from './useBudgetStorage';
+import { PwaStatus } from './PwaStatus';
 
 type Page = 'overview' | 'entries' | 'bills' | 'settings';
 type Editor = { kind: 'setup' } | { kind: 'entry'; entry?: Entry } | { kind: 'bill'; bill?: Bill } | { kind: 'reconcile' } | { kind: 'plan' };
@@ -31,6 +32,7 @@ export default function App() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
+  const [settingsDraft, setSettingsDraft] = useState(false);
   const [currentDate, setCurrentDate] = useState(today);
   useEffect(() => {
     const refresh = () => setCurrentDate(today());
@@ -39,7 +41,7 @@ export default function App() {
     document.addEventListener('visibilitychange', refresh);
     return () => { clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
   }, []);
-  function commit(next: Snapshot) { storage.save(next, mode); setRevision(value => value + 1); setNotice('บันทึกแล้ว'); setError(''); setEditor(null); }
+  function commit(next: Snapshot) { storage.save(next, mode); setRevision(value => value + 1); setSettingsDraft(false); setNotice('บันทึกแล้ว'); setError(''); setEditor(null); }
   function reload() {
     const latest = storage.reload();
     setError('');
@@ -72,7 +74,7 @@ export default function App() {
       {state && <nav aria-label="เมนูหลัก">{pages.map(({ id, label, icon: Icon }) => <button key={id} aria-current={page === id ? 'page' : undefined} onClick={() => { setPage(id); setNotice(''); }}><Icon size={21} /><span>{label}</span></button>)}</nav>}
       <p className="sidebar-note"><Wallet size={18} />ข้อมูลอยู่ในเครื่องของคุณ</p>
     </aside>
-    <main>
+    <main onInputCapture={event => { if (page === 'settings' && (event.target as HTMLElement).closest('form')) setSettingsDraft(true); }}>
       <div className="topbar"><span>แผนเงินของคุณ</span><span>{dateLabel(currentDate)}</span></div>
       {mode === 'sample' && <div className="sample-banner"><strong>โหมดตัวอย่าง · ข้อมูลสมมติ</strong><button onClick={() => { storage.activate('personal', currentDate); setNotice(''); setError(''); setPage('overview'); }}>กลับไปข้อมูลของฉัน <ChevronRight size={16} /></button></div>}
       <div role="status" className={notice ? 'notice' : 'sr-only'}>{notice}</div><div role="alert" className={error ? 'error-banner' : 'sr-only'}>{error}</div>
@@ -91,6 +93,7 @@ export default function App() {
         {page === 'settings' && <div className="settings-grid"><div><section className="panel"><h2>รอบรับเงินและเงินกันไว้</h2><PlanForm key={revision} state={state} currentDate={currentDate} onSave={(nextDate, reserved) => commit({ ...state, nextIncomeDate: nextDate, reserved })} /></section><BackupControls state={state} mode={mode} onImport={commit} onClear={() => { storage.clear(); setPage('overview'); setNotice('ล้างข้อมูลโหมดนี้แล้ว'); }} onNotice={setNotice} />{mode === 'personal' && <button className="secondary" onClick={() => { storage.activate('sample', currentDate); setPage('overview'); setNotice(''); }}>เปิดข้อมูลตัวอย่าง</button>}</div><section className="panel"><h2>ข้อมูลของคุณอยู่ที่ไหน?</h2><p>ข้อมูลอยู่ในเบราว์เซอร์ของอุปกรณ์นี้ ไม่ใช่บัญชีออนไลน์ และไม่ซิงก์ข้ามเครื่อง</p><p>การล้างข้อมูลเว็บไซต์ ใช้โหมดส่วนตัว หรือเปลี่ยนเบราว์เซอร์และที่อยู่เว็บ อาจทำให้ข้อมูลหายหรือไม่ปรากฏ</p><p>ใครที่เข้าถึงเบราว์เซอร์นี้ได้อาจดูข้อมูลได้ เดโมยังไม่มี PIN ล็อกแอป</p><h2>เพิ่มลงหน้าจอหลัก</h2><p>iPhone: เปิดด้วย Safari → แชร์ → เพิ่มไปยังหน้าจอโฮม</p><p>Android: เปิดด้วย Chrome → เมนู → เพิ่มลงหน้าจอหลักหรือติดตั้งแอป</p><p className="hint">ความสามารถขึ้นกับเบราว์เซอร์ สำรองข้อมูลก่อนติดตั้งหรือเปลี่ยนเครื่อง บางอุปกรณ์อาจใช้พื้นที่เก็บข้อมูลแยกจากแท็บเดิม</p></section></div>}
         <footer className="updated">อัปเดตล่าสุด {new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' }).format(new Date(state.updatedAt))} · ข้อมูล{mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}</footer>
       </>}
+      <PwaStatus hasDraft={!!editor || (page === 'settings' && settingsDraft)} />
     </main>
     {editor && <Dialog title={editor.kind === 'setup' ? 'เริ่มแผนของคุณ' : editor.kind === 'entry' ? editor.entry ? 'แก้ไขรายการเงิน' : 'เพิ่มรายการเงิน' : editor.kind === 'bill' ? editor.bill ? 'แก้ไขบิล' : 'เพิ่มบิล' : editor.kind === 'reconcile' ? 'ปรับยอดเงินจริง' : 'ปรับแผนรับเงิน'} onClose={() => setEditor(null)}>
       {storage.conflict && <div className="error-banner" role="alert">อีกแท็บเปลี่ยนข้อมูลแล้ว โหลดข้อมูลล่าสุดก่อนบันทึก ค่าที่กรอกจะยังอยู่ หากอีกแท็บล้างแผนนี้ ฟอร์มจะถูกปิด <button onClick={reload}>โหลดข้อมูลล่าสุด</button></div>}
