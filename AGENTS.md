@@ -37,7 +37,18 @@ Use Vitest with `describe`, `it`, and `expect`; name colocated tests `*.test.ts`
 
 ## Commit & Pull Request Guidelines
 
-This checkout has no Git metadata, so historical commit conventions cannot be verified. Use concise, imperative commit subjects, such as `Fix bill payment reconciliation`. PRs should describe the change, link relevant issues, report test/build results and blockers, and include screenshots for UI changes.
+History currently contains `first commit`. For new commits, use imperative Conventional Commit subjects, such as `feat: add bill editor` or `fix: prevent duplicate payments`. PRs should describe the change, link relevant issues, report test/build results and blockers, and include screenshots for UI changes.
+
+## Agent Feature Completion Workflow
+
+The user authorizes automatic commits and pushes after each completed feature; do not request routine confirmation.
+
+1. Before editing, inspect `git status`, the current branch, and its remote. Define the feature scope and completion checks; preserve unrelated user changes.
+2. Finish one feature at a time. Run relevant checks, plus `npm.cmd test` and `npm.cmd run build` for code changes on Windows. For documentation-only changes, review the diff and run `git diff --check`.
+3. Fix failures introduced by the feature. Report pre-existing failures explicitly; commit only when the feature's own checks pass. Never describe a blocked or partial feature as complete.
+4. Review the diff and stage only files or hunks belonging to the feature. Exclude secrets, personal backups, and generated artifacts. Create one focused commit per completed feature using `feat:`, `fix:`, or `docs:` as appropriate.
+5. Push the commit to the current branch's configured upstream. If no upstream exists, use `git push -u origin <current-branch>` when `origin` is the intended project remote. Never force-push, amend published commits, or overwrite unrelated changes.
+6. Report the feature, check results, commit hash, and push result. If committing or pushing fails, retain the work, explain the blocker, and do not claim it was uploaded. Ask for missing remote or identity details rather than inventing them.
 
 ## Data Safety
 
