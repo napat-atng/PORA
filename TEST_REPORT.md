@@ -25,9 +25,13 @@ Browser checks use synthetic financial data in isolated Playwright sessions. Gen
 - This is a static Direct Upload deployment of 11 files from `dist/`; no database, Functions, paid add-ons, or custom domain were provisioned. Git pushes do not trigger deployment.
 - Wrangler 4.149.0 initially delegated project creation to Workers and failed without deploying anything. Creating the Pages project directly with its `--force` option succeeded; subsequent upload used normal `wrangler pages deploy`.
 
+## User-reported device check
+
+- 9 October 2026 (Asia/Bangkok): the user reports that the production website opens normally on Android. Device model and browser were not specified. This confirms basic access only; data entry, reload persistence, offline use, and installation have not been reported as tested on that device.
+
 ## Not yet verified
 
-- Safari on an actual iPhone and Chrome on an actual Android device, including the on-screen keyboard and installation/storage behavior. Viewport simulation is not device validation.
+- Safari on an actual iPhone; the full Android flow, including browser identification, the on-screen keyboard, persistence, offline use, and installation/storage behavior. Viewport simulation is not device validation.
 - A 3–5-person trial over one income cycle; no usage or feedback results exist yet.
 
 These outstanding checks must not be reported as passed. See `IMPLEMENTATION_PLAN.md` sections 13–16 for the acceptance criteria.
