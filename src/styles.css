@@ -112,6 +112,11 @@ form > .primary { width: 100%; }
 .history-day { padding: 18px 0; border-top: 1px solid #e2e9e3; }
 .history-day h2 { font-size: 14px; margin: 0; }
 .history-day h2 span { font-size: 11px; font-weight: 400; color: #687b73; margin-left: 8px; }
+.backup-reminder { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border: 1px solid #e2e9e3; border-radius: 12px; padding: 14px; margin-bottom: 18px; font-size: 12px; }
+.backup-reminder p { margin: 5px 0 0; color: #687b73; }
+.backup-reminder.backup-due { background: #fff7e8; border-color: #eadcb9; }
+.backup-reminder .secondary { font-size: 12px; }
+.backup-last { color: #145b50; font-weight: 600; }
 @media (max-width: 760px) { .history-filters { grid-template-columns: 1fr 1fr; } .history-filters .field:first-child { grid-column: 1 / -1; } .header-actions .secondary { font-size: 12px; padding: 10px; } }
 .pwa-status { color: #687b73; font-size: 11px; margin-top: 24px; text-align: center; }
 .pwa-status .warning-banner { text-align: left; }

@@ -1,4 +1,5 @@
 import { validateSnapshot, type Mode, type Snapshot } from './domain';
+import { backupKey } from './backup';
 export const key = (mode: Mode) => `leua-use:v1:${mode}`;
 export interface Store { getItem(key: string): string | null; setItem(key: string, value: string): void; removeItem(key: string): void }
 export function load(mode: Mode, store: Store = localStorage): Snapshot | null {
@@ -30,4 +31,5 @@ export function replaceSnapshot(mode: Mode, state: Snapshot, expectedRaw: string
 export function clearSnapshot(mode: Mode, expectedRaw: string | null, store: Store = localStorage): void {
   if (store.getItem(key(mode)) !== expectedRaw) throw new Error('ข้อมูลเปลี่ยนในอีกแท็บ กรุณาโหลดข้อมูลล่าสุดก่อนล้าง');
   try { store.removeItem(key(mode)); } catch { throw new Error('ล้างข้อมูลไม่สำเร็จ เบราว์เซอร์ไม่อนุญาต'); }
+  try { store.removeItem(backupKey(mode)); } catch { /* Financial data was already cleared. */ }
 }
