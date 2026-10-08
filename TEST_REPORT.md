@@ -1,10 +1,10 @@
 # PORA verification status
 
-Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local production preview at `http://127.0.0.1:4173`.
+Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local production preview at `http://127.0.0.1:4190`.
 
 ## Automated checks
 
-- `npm.cmd test`: 19 Vitest cases pass, covering budget formulas, payment/undo, linked edits/deletions, money/date boundaries, opening balance protection, safe integer overflow, backup compatibility/validation, quotas, and cross-tab writes.
+- `npm.cmd test`: 26 Vitest cases across three files pass, covering budget formulas, payment/undo, linked edits/deletions, money/date boundaries, opening balance protection, safe integer overflow, backup compatibility/validation, quotas, cross-tab writes, history filters/totals, and backup reminder metadata.
 - `npm.cmd run build`: TypeScript and Vite production build pass.
 - Playwright with desktop Chromium: 53 browser assertions pass: 38 across setup, bill payment/undo, income/expense entry, reconciliation, linked editing/deletion, personal/sample isolation, persistent reloads, backup round trips, cancellation, invalid/corrupt data, write failures, and concurrent tabs; 8 for offline behavior/manifest/icons; 7 for application updates.
 - Keyboard: native dialog contains Tab focus and restores focus on Escape.
@@ -15,17 +15,29 @@ Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local prod
 
 Browser checks use synthetic financial data in isolated Playwright sessions. Generated screenshots, scripts, and backups are excluded from Git.
 
+## UX improvements
+
+- Unsaved dialogs and settings require confirmation before discarding edits.
+- Expense entry focuses the amount, accepts an optional note, and offers note presets; income has its own action.
+- The overview distinguishes the last spending day from the income date and explains reserved money.
+- Bill payment accepts a payment date, shows a receipt, and offers undo from the overview.
+- History supports search, type/date filters, daily groups, and totals excluding the opening balance; custom date filters fit a 320px viewport.
+- Backup controls show the latest export request and remind users when changed data needs another backup. Export timestamps do not prove that a download was saved; installing the app does not provide online backup.
+
+In addition to the 53 regression assertions above, 25 feature-specific browser assertions passed across development checkpoints. Screenshots were inspected. Financial storage keys and the snapshot schema remain unchanged.
+
 ## Production deployment
 
 - Published on 9 October 2026 (Asia/Bangkok): `https://pora-demo.pages.dev`.
-- Cloudflare Pages project: `pora-demo`; production branch: `main`; deployed source commit: `df944e5`.
-- Deployment ID: `0dd15869-0280-4eea-ace8-a5139895034f`; immutable URL: `https://0dd15869.pora-demo.pages.dev`.
+- Cloudflare Pages project: `pora-demo`; production branch: `main`; deployed source commit: `bcc18b5`.
+- Deployment ID: `8dbdbf26-5f3e-402b-8954-0d4b24f68b71`; immutable URL: `https://8dbdbf26.pora-demo.pages.dev`.
 - HTTPS returns HTTP 200 with the PORA page title. A fresh isolated browser opens the welcome page without another user's data.
-- On the stable production origin, all 38 data/UI assertions and 8 offline/manifest/icon assertions pass (46 total). Browser console reports zero errors/warnings during these checks.
+- On the stable production origin, all 38 data/UI assertions and 8 offline/manifest/icon assertions pass (46 total).
+- An isolated old-version production client retained its exact saved snapshot and entry after loading the new UI (three assertions). The first update attempt timed out because the initial page had no controlling worker; reloading and accepting the update succeeded. The seven local update assertions above used a controlled client.
 - This is a static Direct Upload deployment of 11 files from `dist/`; no database, Functions, paid add-ons, or custom domain were provisioned. Git pushes do not trigger deployment.
 - Wrangler 4.149.0 initially delegated project creation to Workers and failed without deploying anything. Creating the Pages project directly with its `--force` option succeeded; subsequent upload used normal `wrangler pages deploy`.
 
-## User-reported device check
+## User-reported device check (before this UX release)
 
 - 9 October 2026 (Asia/Bangkok): the user reports that the production website opens normally on Android and, after the requested expense-entry/reload check, the data remains. The user also reports that the requested offline check (disconnect, reload, and add an expense after offline readiness) works, and that existing data remains when opening from the home-screen icon after the requested installation/add-to-home-screen check. Device model, browser, and installation method were not specified. Persistence after explicitly closing/reopening the browser has not been reported as tested on that device.
 
