@@ -12,7 +12,7 @@ This repository contains a Thai-language personal budgeting PWA built with React
 - `vite.config.ts`: React integration, PWA manifest, and offline caching configuration.
 - `IMPLEMENTATION_PLAN.md`: product requirements and implementation roadmap; consult it before expanding functionality.
 
-The scaffold is incomplete: `src/App.tsx`, `src/styles.css`, and the PNG icons referenced by the PWA configuration are absent. Do not assume the application currently runs or builds.
+`src/App.tsx` and `src/forms.tsx` implement the screens and forms; `src/useBudgetStorage.ts` and `src/BackupControls.tsx` handle persistence and recovery. See `TEST_REPORT.md` for verified behavior and outstanding checks.
 
 ## Build, Test, and Development Commands
 

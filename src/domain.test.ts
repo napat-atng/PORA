@@ -64,6 +64,21 @@ describe('เงินเหลือใช้และบิล', () => {
     state.entries = [state.entries[0], ...Array.from({ length: 10000 }, (_, i) => ({ id: `large-${i}`, kind: 'income' as const, amount: 1_000_000_000_000, date, note: 'รายรับ' }))];
     expect(() => validateSnapshot(state)).toThrow();
   });
+  it('รองรับรายรับ รายจ่าย แก้ยอดตั้งต้น และไม่ลบยอดตั้งต้น', () => {
+    let state = fixture();
+    state = saveEntry(state, { id: 'income', kind: 'income', amount: 10000, date, note: 'รายรับ' });
+    state = saveEntry(state, { id: 'expense', kind: 'expense', amount: -5000, date, note: 'รายจ่าย' });
+    expect(budget(validateSnapshot(state)).balance).toBe(505000);
+    state = saveEntry(state, { ...state.entries[0], amount: 600000 });
+    expect(budget(state).balance).toBe(605000);
+    expect(() => removeEntry(state, state.entries[0].id)).toThrow('ยอดตั้งต้นลบไม่ได้');
+    expect(budget(removeEntry(state, 'income')).balance).toBe(595000);
+  });
+  it('วันเงินเข้าพรุ่งนี้มีหนึ่งวัน และวันเงินเข้าเลยแล้วไม่คำนวณรายวัน', () => {
+    const state = createSnapshot(10000, addDays(date, 1), 0, date);
+    expect(budget(state, date)).toMatchObject({ days: 1, daily: 10000 });
+    expect(budget(state, addDays(date, 2))).toMatchObject({ days: 0, daily: null, balance: 10000 });
+  });
 });
 describe('ข้อมูลสำรองและพื้นที่เก็บข้อมูล', () => {
   const memory = (): Store => { const data = new Map<string, string>(); return { getItem: k => data.get(k) ?? null, setItem: (k, v) => { data.set(k, v); }, removeItem: k => { data.delete(k); } }; };
@@ -118,5 +133,15 @@ describe('ข้อมูลสำรองและพื้นที่เก�
     expect(() => replaceSnapshot('personal', saved, previous, store)).toThrow('อีกแท็บ');
     expect(() => clearSnapshot('personal', previous, store)).toThrow('อีกแท็บ');
     expect(load('personal', store)).toEqual(changed);
+  });
+  it('ปฏิเสธจำนวนรายการเกินขอบเขตและข้อมูลที่มีบิลอ้างอิงผิด', () => {
+    const state = fixture();
+    expect(() => validateSnapshot({ ...state, entries: Array(20001).fill(state.entries[0]) })).toThrow();
+    expect(() => validateSnapshot({ ...state, bills: Array(5001).fill(state.bills[0]) })).toThrow();
+    const dangling = saveEntry(state, { id: 'dangling', kind: 'expense', amount: -100, date, note: 'บิลหาย', billId: 'unknown' });
+    expect(() => validateSnapshot(dangling)).toThrow();
+    const paid = payBill(state, 'bill');
+    paid.bills[0].paidEntryId = 'unknown';
+    expect(() => validateSnapshot(paid)).toThrow();
   });
 });

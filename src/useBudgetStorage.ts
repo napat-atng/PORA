@@ -31,11 +31,13 @@ export function useBudgetStorage() {
     if (mode === 'sample' && next.raw === null && !next.issue) {
       try {
         const state = replaceSnapshot(mode, createSample(currentDate), null);
-        update({ ...next, state, raw: JSON.stringify(state) });
-        return;
-      } catch (error) { update({ ...next, issue: (error as Error).message }); return; }
+        const saved = { ...next, state, raw: JSON.stringify(state) };
+        update(saved);
+        return saved;
+      } catch (error) { const failed = { ...next, issue: (error as Error).message }; update(failed); return failed; }
     }
     update(next);
+    return next;
   }
   function save(state: Snapshot, expectedMode: Mode = session.mode) {
     const current = latest.current;
