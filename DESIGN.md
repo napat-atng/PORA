@@ -32,9 +32,16 @@ See [Mantine theming](https://mantine.dev/theming/mantine-provider/) and [Modal 
 
 ## Interaction and layout rules
 
-- Keep Thai-capable system fonts and all UI assets local for offline operation.
+- Use self-hosted **Anuphan Variable** for Thai text, headings, and tabular money. Font files are bundled and precached for offline operation; the OFL license ships in `public/fonts/`. See [Fontsource installation](https://fontsource.org/fonts/anuphan/install).
 - Preserve integer-satang calculations, Bangkok dates, and personal/sample storage isolation.
 - Use 44px minimum action targets and 48px inputs. Keep labels visible and errors associated with fields.
 - Focus the amount when entering a transaction. Guard unsaved changes; cancel must retain the draft. Escape dismisses the top confirmation, and editor closure restores its initiating action.
 - Desktop: sidebar and two-column content. Mobile: bottom navigation and stacked panels. At 320px, summary amounts become full-width rows.
 - Verify 320, 390, 768, and 1440px, long names, large supported amounts, keyboard navigation, offline writes, and app updates.
+
+## Typography and motion
+
+- Use weights 400–700, relaxed Thai line height, and tight spacing only for the Latin brand and large numbers. Keep financial values readable and immediately accurate.
+- Panels enter with a short fade and lift; summary cards appear in sequence. The wallet illustration gently settles once, and a changed daily allowance receives a brief highlight without counting through intermediate amounts.
+- Buttons lift on pointer hover and compress on press; navigation icons acknowledge selection. Inputs highlight focus, and dialogs enter gently without changing their keyboard handling.
+- Motion finishes within five seconds, runs through CSS transforms/opacity where possible, and never repeats indefinitely. Respect `prefers-reduced-motion` in both CSS and Mantine.

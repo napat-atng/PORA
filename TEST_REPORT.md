@@ -17,6 +17,13 @@ Browser checks use synthetic financial data in isolated Playwright sessions. Gen
 
 ## UX improvements
 
+### Anuphan typography and finite motion
+
+- Self-hosted Anuphan Variable replaces system typography throughout the Mantine theme. Thai and Latin WOFF2 files are bundled and precached; the font's OFL license is included in `public/fonts/OFL-Anuphan.txt`.
+- Added short panel/dialog entrances, staggered summary cards, a settling wallet illustration, navigation icon feedback, button hover/press feedback, and a daily-allowance highlight. Amounts update immediately without interpolating financial values. Press feedback scales the inner label, preserving the 44px action target.
+- 26 Vitest cases and the production build pass. Chromium checks pass: 17 font/motion/offline assertions, 39 responsive assertions at 320/390/768/1440px including long amounts and names, and eight confirmation/keyboard interaction assertions.
+- Verified Thai/Latin font loading after an offline reload, financial data preservation, no continuously running animations, and disabled card/dialog/button motion under `prefers-reduced-motion: reduce`. Mobile and desktop screenshots were inspected; tests use isolated synthetic data.
+
 ### Mantine wallet redesign
 
 - Researched NN/g visual hierarchy and progressive disclosure plus finance design references; decisions and source links are in `DESIGN.md`.

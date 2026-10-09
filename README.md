@@ -65,7 +65,7 @@ npx.cmd wrangler pages deploy dist --project-name pora-demo --branch main
 
 ## โครงสร้างและผลตรวจ
 
-หน้าตาเป็นกระเป๋าเงินสมัยใหม่: พื้นสว่าง การ์ดยอด navy และปุ่ม indigo ใช้ **Mantine** เป็น component library เดียวทั้งแอป งบต่อวันเด่นเป็นอันดับแรก แก้ไข/ลบผ่านเมนู `…` ของรายการ ดูงานวิจัย UX/UI และข้อกำหนด component ใน [DESIGN.md](DESIGN.md)
+หน้าตาเป็นกระเป๋าเงินสมัยใหม่: พื้นสว่าง การ์ดยอด navy และปุ่ม indigo ใช้ **Mantine** เป็น component library เดียวทั้งแอป งบต่อวันเด่นเป็นอันดับแรก แก้ไข/ลบผ่านเมนู `…` ของรายการ ใช้ฟอนต์ไทย **Anuphan Variable** ที่เก็บในแอปสำหรับออฟไลน์ พร้อมแอนิเมชันเปิดการ์ด ปุ่ม และไฮไลต์ยอดที่เปลี่ยน รองรับการตั้งค่าลดการเคลื่อนไหว ดูรายละเอียดใน [DESIGN.md](DESIGN.md)
 
 - `src/domain.ts`: สูตรและกฎข้อมูล; `src/storage.ts`: บันทึกและสำรอง
 - `src/App.tsx`, `src/forms.tsx`, `src/styles.css`: หน้าจอและฟอร์ม

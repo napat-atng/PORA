@@ -7,8 +7,9 @@ export { TextInput, NativeSelect, Badge, ThemeIcon, Alert, Text, Title } from '@
 
 export const theme = createTheme({
   primaryColor: 'indigo', primaryShade: 7, defaultRadius: 'md',
-  fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
-  headings: { fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif", fontWeight: '700' },
+  fontFamily: "'Anuphan Variable', sans-serif",
+  headings: { fontFamily: "'Anuphan Variable', sans-serif", fontWeight: '700' },
+  respectReducedMotion: true,
   components: {
     Button: MantineButton.extend({ defaultProps: { size: 'md', styles: { root: { minHeight: 44 }, label: { gap: 8, whiteSpace: 'normal' } } } }),
     Paper: Paper.extend({ defaultProps: { radius: 'lg', withBorder: true } }),
