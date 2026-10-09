@@ -42,11 +42,11 @@ const decimal = (value: number) => (value / 100).toFixed(2);
 export function SetupForm({ currentDate, onSave }: { currentDate: string; onSave: (balance: number, nextDate: string, reserved: number) => void }) {
   const { errors, submit } = useForm(data => onSave(amount(data, 'balance'), date(data, 'nextDate', currentDate, true), amount(data, 'reserved')));
   return <form onSubmit={submit} noValidate>
-    <p className="muted">รวมเงินที่คุณใช้จ่ายได้จริง ไม่รวมวงเงินสินเชื่อ เริ่มต้นโดยไม่ต้องสมัครสมาชิก</p>
+    <p className="muted">ใส่เงินที่ใช้ได้จริง ไม่รวมวงเงินสินเชื่อ</p>
     <Field name="balance" label="เงินที่มีตอนนี้ (บาท)" errors={errors}><input id="balance" name="balance" inputMode="decimal" defaultValue="" placeholder="เช่น 5000" aria-describedby="balance-error" /></Field>
     <Field name="nextDate" label="วันเงินเข้าครั้งหน้า" errors={errors}><input id="nextDate" name="nextDate" type="date" min={addDays(currentDate, 1)} defaultValue={addDays(currentDate, 14)} aria-describedby="nextDate-error" /></Field>
     <Field name="reserved" label="เงินกันเพิ่มเติม (บาท)" errors={errors}><input id="reserved" name="reserved" inputMode="decimal" defaultValue="0" aria-describedby="reserved-error" /></Field>
-    <p className="hint">เงินที่ตั้งใจไม่ใช้ในรอบนี้ เช่น เงินสำรอง 1,000 บาท ไม่รวมบิลและไม่ใช่รายจ่าย คุณเพิ่มบิลได้หลังตั้งค่าเสร็จ</p>
+    <p className="hint">เงินกัน = เงินที่ตั้งใจเก็บ ไม่รวมบิล เพิ่มบิลได้ภายหลัง</p>
     <Actions errors={errors} label="เริ่มวางแผนเงิน" />
   </form>;
 }
@@ -64,10 +64,10 @@ export function EntryForm({ entry, initialKind = 'expense', currentDate, onSave,
     <Field name="kind" label="ชนิดรายการ" errors={errors}><select id="kind" value={kind} onChange={event => setKind(event.target.value as Entry['kind'])} disabled={!!entry && (entry.kind === 'opening' || entry.kind === 'adjustment' || !!entry.billId)}>
       <option value="expense">รายจ่าย</option><option value="income">รายรับ</option>{entry?.kind === 'opening' && <option value="opening">ยอดตั้งต้น</option>}{entry?.kind === 'adjustment' && <option value="adjustment">ปรับยอด</option>}
     </select></Field>
-    {entry?.billId && <p className="hint">รายการนี้เชื่อมกับบิล การแก้จำนวนเงินและหมายเหตุจะอัปเดตบิลด้วย</p>}
+    {entry?.billId && <p className="hint">เชื่อมบิลอยู่: แก้ยอดหรือหมายเหตุจะอัปเดตบิลด้วย</p>}
     <Field name="amount" label="จำนวนเงิน (บาท)" errors={errors}><input id="amount" name="amount" data-initial-focus inputMode={kind === 'adjustment' ? 'text' : 'decimal'} defaultValue={entry ? decimal(kind === 'adjustment' ? entry.amount : Math.abs(entry.amount)) : ''} aria-describedby="amount-error" /></Field>
     <Field name="entryDate" label="วันที่ได้รับหรือจ่ายเงินจริง" errors={errors}><input id="entryDate" name="entryDate" type="date" max={currentDate} defaultValue={entry?.date ?? currentDate} aria-describedby="entryDate-error" /></Field>
-    <Field name="note" label="หมายเหตุ (ไม่จำเป็น)" errors={errors}><input id="note" name="note" maxLength={150} value={note} onChange={event => setNote(event.target.value)} placeholder="เว้นว่างได้ หรือเลือกข้อความด้านล่าง" aria-describedby="note-error" /></Field>
+    <Field name="note" label="หมายเหตุ (ไม่จำเป็น)" errors={errors}><input id="note" name="note" maxLength={150} value={note} onChange={event => setNote(event.target.value)} placeholder="เช่น อาหารกลางวัน" aria-describedby="note-error" /></Field>
     {(kind === 'expense' || kind === 'income') && <div className="quick-notes" role="group" aria-label="หมายเหตุที่ใช้บ่อย">{(kind === 'expense' ? ['อาหาร', 'เดินทาง', 'ซื้อของ', 'ค่าใช้จ่ายอื่น'] : ['เงินเดือน', 'รายได้เสริม', 'เงินคืน']).map(label => <button type="button" key={label} aria-pressed={note === label} onClick={() => { setNote(label); onDraft?.(); }}>{label}</button>)}</div>}
     <Actions errors={errors} />
   </form>;
@@ -82,24 +82,24 @@ export function BillForm({ bill, currentDate, onSave }: { bill?: Bill; currentDa
     onSave({ id: bill?.id ?? id(), title, amount: amount(data, 'amount', false, true), due });
   });
   return <form onSubmit={submit} noValidate>
-    {bill?.paidEntryId && <p className="hint">บิลนี้จ่ายแล้ว การแก้ไขจะอัปเดตรายจ่ายที่เชื่อมกันด้วย</p>}
+    {bill?.paidEntryId && <p className="hint">จ่ายแล้ว: แก้บิลจะอัปเดตรายจ่ายด้วย</p>}
     <Field name="title" label="ชื่อบิล" errors={errors}><input id="title" name="title" maxLength={150} defaultValue={bill?.title ?? ''} placeholder="เช่น ค่าเช่าห้อง" aria-describedby="title-error" /></Field>
     <Field name="amount" label="จำนวนเงิน (บาท)" errors={errors}><input id="amount" name="amount" inputMode="decimal" defaultValue={bill ? decimal(bill.amount) : ''} aria-describedby="amount-error" /></Field>
     <Field name="due" label="วันครบกำหนด" errors={errors}><input id="due" name="due" type="date" defaultValue={bill?.due ?? currentDate} aria-describedby="due-error" /></Field>
-    <p className="hint">เพิ่มบิลแต่ละรอบเอง ไม่มีการสร้างบิลซ้ำอัตโนมัติ</p><Actions errors={errors} />
+    <p className="hint">เพิ่มบิลเองในแต่ละรอบ</p><Actions errors={errors} />
   </form>;
 }
 
 export function ReconcileForm({ balance, onSave }: { balance: number; onSave: (actual: number) => void }) {
   const { errors, submit } = useForm(data => onSave(amount(data, 'actual')));
-  return <form onSubmit={submit} noValidate><p className="muted">เพิ่มเฉพาะผลต่างจากยอดเดิม ไม่เปลี่ยนสถานะบิล ถ้ายอดเท่าเดิมจะไม่เพิ่มรายการ</p>
+  return <form onSubmit={submit} noValidate><p className="muted">บันทึกเฉพาะผลต่าง บิลไม่เปลี่ยน ยอดเท่าเดิมไม่เพิ่มรายการ</p>
     <Field name="actual" label="เงินที่มีจริงตอนนี้ (บาท)" errors={errors}><input id="actual" name="actual" inputMode="decimal" defaultValue={balance >= 0 ? decimal(balance) : ''} aria-describedby="actual-error" /></Field><Actions errors={errors} /></form>;
 }
 
 export function PayBillForm({ bill, currentDate, onSave }: { bill: Bill; currentDate: string; onSave: (paidDate: string) => void }) {
   const { errors, submit } = useForm(data => onSave(date(data, 'paidDate', currentDate)));
   return <form onSubmit={submit} noValidate><p><strong>{bill.title} · {money(bill.amount)} บาท</strong></p>
-    <p className="hint">ระบุวันที่จ่ายเงินจริง เลือกย้อนหลังได้ ระบบบันทึกรายจ่ายและนำบิลนี้ออกจากยอดกันไว้พร้อมกัน</p>
+    <p className="hint">เลือกวันจ่ายจริง ระบบบันทึกรายจ่ายและปลดเงินกันบิล</p>
     <Field name="paidDate" label="วันที่จ่ายเงินจริง" errors={errors}><input id="paidDate" name="paidDate" type="date" data-initial-focus max={currentDate} defaultValue={currentDate} aria-describedby="paidDate-error" /></Field>
     <Actions errors={errors} label="ยืนยันบันทึกจ่ายบิล" /></form>;
 }
@@ -109,5 +109,5 @@ export function PlanForm({ state, currentDate, onSave }: { state: Snapshot; curr
   return <form onSubmit={submit} noValidate>
     <Field name="nextDate" label="วันเงินเข้าครั้งหน้า" errors={errors}><input id="nextDate" name="nextDate" type="date" min={addDays(currentDate, 1)} defaultValue={state.nextIncomeDate} aria-describedby="nextDate-error" /></Field>
     <Field name="reserved" label="เงินกันเพิ่มเติม (บาท)" errors={errors}><input id="reserved" name="reserved" inputMode="decimal" defaultValue={decimal(state.reserved)} aria-describedby="reserved-error" /></Field>
-    <p className="hint">เงินกันเพิ่มเติมคือเงินที่ตั้งใจไม่ใช้ในรอบนี้ เช่น เงินสำรอง 1,000 บาท ไม่รวมยอดบิล การลดเงินกันไว้เป็นการเปลี่ยนแผน หากใช้เงินจริงให้บันทึกรายจ่ายด้วย</p><Actions errors={errors} label="บันทึกแผน" /></form>;
+    <p className="hint">เงินกัน = เงินที่ตั้งใจเก็บ ไม่รวมบิล หากใช้จริงให้บันทึกรายจ่าย</p><Actions errors={errors} label="บันทึกแผน" /></form>;
 }

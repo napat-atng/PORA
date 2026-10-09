@@ -25,8 +25,8 @@ export function PwaStatus({ hasDraft }: { hasDraft: boolean }) {
   }, []);
   const ready = cached || offlineReady;
   return <section className="pwa-status" aria-label="สถานะแอป">
-    <span role="status">{ready ? 'พร้อมเปิดใช้ออฟไลน์บนเบราว์เซอร์นี้' : 'กำลังเตรียมไฟล์สำหรับใช้ออฟไลน์'}</span>
-    {needRefresh && !dismissed && <div className="warning-banner" role="status"><strong>มี PORA เวอร์ชันใหม่</strong><p>{hasDraft ? 'บันทึกหรือปิดฟอร์มก่อนอัปเดต เพื่อเก็บข้อมูลที่กำลังกรอก' : 'อัปเดตไฟล์แอป ข้อมูลที่บันทึกในเครื่องจะยังอยู่'}</p><button className="primary" disabled={hasDraft} onClick={() => { void updateServiceWorker().catch(() => setError('อัปเดตไม่สำเร็จ กรุณาลองใหม่')); }}>อัปเดตแอป</button><button onClick={() => setDismissed(true)}>ไว้ภายหลัง</button></div>}
+    <span role="status">{ready ? 'พร้อมใช้ออฟไลน์' : 'กำลังเตรียมออฟไลน์'}</span>
+    {needRefresh && !dismissed && <div className="warning-banner" role="status"><strong>มี PORA เวอร์ชันใหม่</strong><p>{hasDraft ? 'บันทึกหรือปิดฟอร์มก่อนอัปเดต' : 'ข้อมูลที่บันทึกไว้ยังอยู่'}</p><button className="primary" disabled={hasDraft} onClick={() => { void updateServiceWorker().catch(() => setError('อัปเดตไม่สำเร็จ กรุณาลองใหม่')); }}>อัปเดตแอป</button><button onClick={() => setDismissed(true)}>ไว้ภายหลัง</button></div>}
     {needRefresh && dismissed && <button onClick={() => setDismissed(false)}>ดูการอัปเดตแอป</button>}
     {error && <p role="alert" className="field-error">{error}{!hasDraft && <button onClick={() => window.location.reload()}>โหลดหน้าใหม่</button>}</p>}
   </section>;

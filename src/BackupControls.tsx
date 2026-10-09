@@ -18,13 +18,12 @@ export function BackupControls({ state, mode, onImport, onClear, onNotice, onBac
       onBackup?.();
       if (!info) setError('เริ่มดาวน์โหลดแล้ว แต่บันทึกเวลาส่งออกไม่ได้ กรุณาตรวจไฟล์ในรายการดาวน์โหลด');
       else setError('');
-      onNotice('เริ่มดาวน์โหลดไฟล์สำรองแล้ว ตรวจว่าไฟล์อยู่ในรายการดาวน์โหลดและเก็บไว้ในที่ปลอดภัย');
+      onNotice('เริ่มส่งออกแล้ว ตรวจไฟล์ใน Downloads');
     } catch (cause) { setError((cause as Error).message); }
   }
-  return <section className="panel" id="backup-controls"><h2>สำรองและจัดการข้อมูล{mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}</h2>
+  return <section className="panel" id="backup-controls"><h2>สำรองข้อมูล{mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}</h2>
     <p className="backup-last" role="status">{backupLabel(readBackupInfo(mode))}</p>
-    <p>ดาวน์โหลด JSON เก็บไว้ในเครื่อง ไม่มีการอัปโหลดข้อมูล การนำเข้าและล้างข้อมูลมีผลเฉพาะโหมดนี้</p>
-    <p className="hint">เวลานี้คือเวลาที่สั่งส่งออก ไม่ยืนยันว่าไฟล์ถูกเก็บสำเร็จ กรุณาตรวจรายการดาวน์โหลด การติดตั้งแอปไม่ได้สำรองข้อมูลออนไลน์ให้</p>
+    <p>เก็บไฟล์ JSON ไว้ในเครื่อง · ไม่สำรองออนไลน์</p><details className="help-details"><summary>ก่อนจัดการข้อมูล</summary><p>เวลาส่งออกคือเวลาที่สั่งดาวน์โหลด ตรวจว่าไฟล์อยู่ใน Downloads ด้วย</p><p>นำเข้าและล้างข้อมูลมีผลเฉพาะโหมดนี้ การติดตั้งแอปไม่ได้สำรองข้อมูลให้</p></details>
     <div className="backup-actions"><button className="secondary" disabled={!state || busy} onClick={download}><Download size={18} />ส่งออกข้อมูล</button><button className="secondary" disabled={busy} onClick={() => input.current?.click()}><Upload size={18} />นำเข้าไฟล์สำรอง</button></div>
     <input ref={input} type="file" accept=".json,application/json" className="sr-only" aria-label="เลือกไฟล์สำรอง JSON" disabled={busy} onChange={async event => {
       const file = event.currentTarget.files?.[0];

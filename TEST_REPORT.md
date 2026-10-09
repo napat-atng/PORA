@@ -1,6 +1,6 @@
 # PORA verification status
 
-Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local production preview at `http://127.0.0.1:4190`.
+Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local production preview at `http://127.0.0.1:4195`.
 
 ## Automated checks
 
@@ -16,6 +16,17 @@ Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local prod
 Browser checks use synthetic financial data in isolated Playwright sessions. Generated screenshots, scripts, and backups are excluded from Git.
 
 ## UX improvements
+
+### BudgetZen design refresh
+
+- Selected BudgetZen from designmd.ai after comparing finance and calm dashboard styles. `DESIGN.md` records the page prompt, source, and PORA adaptations.
+- Applied a light mint hero, white rounded panels, icon tiles, note chips, date badge, accessible darker green actions, subtle shadows, and amber deficit presentation. System fonts keep Thai text and offline operation independent of font services.
+- Shortened welcome, overview, forms, history, backup, and PWA copy. Storage, installation, and backup caveats remain available in collapsed native details sections.
+- Local checks: 26 Vitest cases, TypeScript/build, and 53 browser regression assertions pass on this refresh, including seven controlled-client update assertions. Final build uses standard minification.
+- An additional 39 browser assertions verify all four pages and entry dialogs at 320, 390, 768, and 1440px, custom date ranges, collapsed/expanded help, amount focus, large valid financial values, long notes, and 44px visible button heights. Mobile/desktop overview, settings, welcome, and form screenshots were inspected. These are Chromium viewport checks, not physical-device tests.
+- React review: hooks and financial state paths unchanged; native details preserve keyboard interaction; added action icons retain text/accessibility labels; no dependencies or financial schema changes.
+
+### Earlier usability improvements
 
 - Unsaved dialogs and settings require confirmation before discarding edits.
 - Expense entry focuses the amount, accepts an optional note, and offers note presets; income has its own action.
