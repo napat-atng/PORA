@@ -74,6 +74,7 @@ npx.cmd wrangler pages deploy dist --project-name pora-demo --branch main
 - `src/EntryHistory.tsx`, `src/history.ts`: ค้นหา/กรองประวัติและยอดรวม; `src/backup.ts`: เวลาส่งออกและเงื่อนไขแจ้งเตือน
 - `src/PwaStatus.tsx`, `vite.config.ts`, `public/`: PWA และไอคอน
 - [แผนงาน](IMPLEMENTATION_PLAN.md), [ผลตรวจและข้อจำกัด](TEST_REPORT.md), [แนวทาง contributor/agent](AGENTS.md)
+- [แผนพัฒนาต่อจากมุมผู้ใช้](PRODUCT_ROADMAP.md): รายได้ไม่แน่นอน บันทึกเร็ว กระเป๋า/โอน และความเป็นไปได้ของการนำเข้าจาก LINE
 - [คู่มือทดลองกับผู้ใช้](TRIAL_GUIDE.md)
 
 ตรวจอัตโนมัติและเผยแพร่แล้ว แต่ยังต้องตรวจมือถือจริง และทดลองกับผู้ใช้ 3–5 คนหนึ่งรอบรับเงิน ห้ามนับการจำลอง viewport เป็นผลทดสอบมือถือจริง
