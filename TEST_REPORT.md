@@ -50,11 +50,11 @@ In addition to the 53 regression assertions above, 25 feature-specific browser a
 ## Production deployment
 
 - Published on 9 October 2026 (Asia/Bangkok): `https://pora-demo.pages.dev`.
-- Cloudflare Pages project: `pora-demo`; production branch: `main`; deployed source commit: `e6f6bab`.
-- Deployment ID: `8cd0669c-a357-4da6-a1c3-cf38e1364c73`; immutable URL: `https://8cd0669c.pora-demo.pages.dev`.
+- Cloudflare Pages project: `pora-demo`; production branch: `main`; deployed source commit: `92d1b78`.
+- Deployment ID: `f5582264-121f-4dcf-a43a-99d446f17b9a`; immutable URL: `https://f5582264.pora-demo.pages.dev`.
 - HTTPS returns HTTP 200 with the PORA page title. A fresh isolated browser opens the welcome page without another user's data.
 - On the stable production origin, all 38 data/UI assertions and 8 offline/manifest/icon assertions pass (46 total).
-- The 39 responsive/design assertions also pass on the stable production origin (85 browser assertions total for this deployed refresh).
+- The 39 responsive/design assertions and eight dedicated Mantine interaction assertions also pass on the stable production origin (93 browser assertions total for this deployed wallet redesign).
 - During the earlier UX release, an isolated old-version production client retained its exact saved snapshot and entry after loading the new UI (three assertions). Its first update attempt timed out because the initial page had no controlling worker; reloading and accepting the update succeeded. The seven local update assertions for this design refresh used a controlled client.
 - This is a static Direct Upload deployment of 11 files from `dist/`; no database, Functions, paid add-ons, or custom domain were provisioned. Git pushes do not trigger deployment.
 - Wrangler 4.149.0 initially delegated project creation to Workers and failed without deploying anything. Creating the Pages project directly with its `--force` option succeeded; subsequent upload used normal `wrangler pages deploy`.
