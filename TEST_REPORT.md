@@ -1,6 +1,6 @@
 # PORA verification status
 
-Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local production preview at `http://127.0.0.1:4195`.
+Verified on 9 October 2026 (Asia/Bangkok) using Node.js 24.15.0 and a local production preview at `http://127.0.0.1:4197`.
 
 ## Automated checks
 
@@ -17,7 +17,17 @@ Browser checks use synthetic financial data in isolated Playwright sessions. Gen
 
 ## UX improvements
 
-### BudgetZen design refresh
+### Mantine wallet redesign
+
+- Researched NN/g visual hierarchy and progressive disclosure plus finance design references; decisions and source links are in `DESIGN.md`.
+- Replaced UI controls with Mantine 9.7.1: Button, ActionIcon, TextInput, NativeSelect, Paper, Menu, Badge, ThemeIcon, Alert, Accordion, Modal, and Text/Title. Browser confirmations became Mantine confirmation modals. The browser's leave-page warning remains native.
+- Introduced a light canvas/navy wallet card, prominent daily allowance, secondary cycle balance, concise supporting copy, and row menus for edit/delete. At 320px, balance cards become full-width summary rows to preserve readable numbers.
+- 26 Vitest cases and the standard production build pass. During migration, the 53 browser regression assertions (38 data/UI, eight offline, seven updates), four draft-preservation assertions, and 39 responsive assertions pass. Browser scripts were adapted to menu items and asynchronous confirmation dialogs; no financial logic, snapshot schema, or storage keys changed.
+- Eight dedicated library interaction assertions pass: layered confirmations, cancel retains draft, confirmation focus trap, Escape dismisses only the confirmation, discard returns focus, discard does not save, row editor returns focus, and cancel delete preserves the entry. An Escape propagation issue and menu-trigger focus issue were corrected before release.
+- Screenshots of mobile/desktop overview and entry forms were inspected. React review checked hooks, confirmation cancellation, accessible action labels, input labels, provider ownership, and effect cleanup. UI library assets are bundled locally; no external font dependency was added.
+- These checks use isolated Chromium sessions and simulated viewport sizes, not new physical Android/iPhone results or user preference evidence.
+
+### Earlier BudgetZen design refresh
 
 - Selected BudgetZen from designmd.ai after comparing finance and calm dashboard styles. `DESIGN.md` records the page prompt, source, and PORA adaptations.
 - Applied a light mint hero, white rounded panels, icon tiles, note chips, date badge, accessible darker green actions, subtle shadows, and amber deficit presentation. System fonts keep Thai text and offline operation independent of font services.

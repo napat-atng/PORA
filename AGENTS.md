@@ -31,6 +31,8 @@ Follow existing TypeScript conventions: two-space indentation, single quotes, se
 
 Keep financial logic in `domain.ts` and persistence in `storage.ts`. Represent money as integer satang and calendar dates as `YYYY-MM-DD`; preserve `Asia/Bangkok` date handling and Thai user-facing text.
 
+Use Mantine for UI controls, typography, panels, help, menus, and dialogs. Shared theme/adapters live in `src/ui.tsx`; providers are configured in `src/main.tsx`. Follow `DESIGN.md`, preserve 44px action targets, and verify unsaved-change guards, dialog/menu focus restoration, and responsive layouts when changing interactions. Do not introduce a second UI library.
+
 ## Testing Guidelines
 
 Use Vitest with `describe`, `it`, and `expect`; name colocated tests `*.test.ts`. Cover calculation boundaries, bill/entry consistency, invalid backups, storage failures, and concurrent-tab conflicts. Use an in-memory `Store` for persistence tests. No coverage threshold is configured. For UI/PWA changes, manually check mobile layout, installation, and offline behavior.

@@ -1,5 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { MantineProvider } from '@mantine/core';
+import { ModalsProvider } from '@mantine/modals';
+import { theme } from './ui';
+import '@mantine/core/styles.css';
 import './styles.css';
-createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
+createRoot(document.getElementById('root')!).render(<StrictMode><MantineProvider theme={theme} forceColorScheme="light"><ModalsProvider><App /></ModalsProvider></MantineProvider></StrictMode>);

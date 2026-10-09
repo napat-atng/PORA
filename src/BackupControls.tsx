@@ -1,3 +1,5 @@
+import { confirmAction } from './ui';
+import { Panel, Title, Text, Disclosure, Button, TextInput } from './ui';
 import { useRef, useState } from 'react';
 import { Download, Upload } from 'lucide-react';
 import { today, type Mode, type Snapshot } from './domain';
@@ -21,11 +23,11 @@ export function BackupControls({ state, mode, onImport, onClear, onNotice, onBac
       onNotice('เริ่มส่งออกแล้ว ตรวจไฟล์ใน Downloads');
     } catch (cause) { setError((cause as Error).message); }
   }
-  return <section className="panel" id="backup-controls"><h2>สำรองข้อมูล{mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}</h2>
-    <p className="backup-last" role="status">{backupLabel(readBackupInfo(mode))}</p>
-    <p>เก็บไฟล์ JSON ไว้ในเครื่อง · ไม่สำรองออนไลน์</p><details className="help-details"><summary>ก่อนจัดการข้อมูล</summary><p>เวลาส่งออกคือเวลาที่สั่งดาวน์โหลด ตรวจว่าไฟล์อยู่ใน Downloads ด้วย</p><p>นำเข้าและล้างข้อมูลมีผลเฉพาะโหมดนี้ การติดตั้งแอปไม่ได้สำรองข้อมูลให้</p></details>
-    <div className="backup-actions"><button className="secondary" disabled={!state || busy} onClick={download}><Download size={18} />ส่งออกข้อมูล</button><button className="secondary" disabled={busy} onClick={() => input.current?.click()}><Upload size={18} />นำเข้าไฟล์สำรอง</button></div>
-    <input ref={input} type="file" accept=".json,application/json" className="sr-only" aria-label="เลือกไฟล์สำรอง JSON" disabled={busy} onChange={async event => {
+  return <Panel className="panel" id="backup-controls"><Title order={2}>สำรองข้อมูล{mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}</Title>
+    <Text component="p" className="backup-last" role="status">{backupLabel(readBackupInfo(mode))}</Text>
+    <Text component="p">เก็บไฟล์ JSON ไว้ในเครื่อง · ไม่สำรองออนไลน์</Text><Disclosure className="help-details"><summary>ก่อนจัดการข้อมูล</summary><Text component="p">เวลาส่งออกคือเวลาที่สั่งดาวน์โหลด ตรวจว่าไฟล์อยู่ใน Downloads ด้วย</Text><Text component="p">นำเข้าและล้างข้อมูลมีผลเฉพาะโหมดนี้ การติดตั้งแอปไม่ได้สำรองข้อมูลให้</Text></Disclosure>
+    <div className="backup-actions"><Button className="secondary" disabled={!state || busy} onClick={download}><Download size={18} />ส่งออกข้อมูล</Button><Button className="secondary" disabled={busy} onClick={() => input.current?.click()}><Upload size={18} />นำเข้าไฟล์สำรอง</Button></div>
+    <TextInput ref={input} type="file" accept=".json,application/json" className="sr-only" aria-label="เลือกไฟล์สำรอง JSON" disabled={busy} onChange={async event => {
       const file = event.currentTarget.files?.[0];
       event.currentTarget.value = '';
       if (!file) return;
@@ -33,15 +35,15 @@ export function BackupControls({ state, mode, onImport, onClear, onNotice, onBac
       try {
         if (file.size > 10 * 1024 * 1024) throw new Error('ไฟล์ใหญ่เกิน 10 MB กรุณาเลือกไฟล์สำรองของ PORA');
         const imported = importBackup(await file.text());
-        if (window.confirm(`ตรวจไฟล์แล้ว พบ ${imported.entries.length} รายการเงิน และ ${imported.bills.length} บิล แทนที่ข้อมูล${mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}ทั้งหมดด้วยไฟล์นี้หรือไม่?`)) onImport(imported);
+        if (await confirmAction(`ตรวจไฟล์แล้ว พบ ${imported.entries.length} รายการเงิน และ ${imported.bills.length} บิล แทนที่ข้อมูล${mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}ทั้งหมดด้วยไฟล์นี้หรือไม่?`)) onImport(imported);
       } catch (cause) { setError((cause as Error).message); }
       finally { setBusy(false); }
     }} />
-    <p className="field-error" role="alert">{error}</p>
-    <button className="danger-text" disabled={busy} onClick={() => {
+    <Text component="p" className="field-error" role="alert">{error}</Text>
+    <Button className="danger-text" disabled={busy} onClick={async () => {
       setError('');
-      if (!window.confirm(`ล้างข้อมูล${mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}ทั้งหมดหรือไม่? ย้อนกลับไม่ได้ ควรส่งออกไฟล์สำรองก่อน`)) return;
+      if (!await confirmAction(`ล้างข้อมูล${mode === 'sample' ? 'ตัวอย่าง' : 'ส่วนตัว'}ทั้งหมดหรือไม่? ย้อนกลับไม่ได้ ควรส่งออกไฟล์สำรองก่อน`)) return;
       try { onClear(); } catch (cause) { setError((cause as Error).message); }
-    }}>ล้างข้อมูลโหมดนี้</button>
-  </section>;
+    }}>ล้างข้อมูลโหมดนี้</Button>
+  </Panel>;
 }

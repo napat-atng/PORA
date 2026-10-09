@@ -1,26 +1,40 @@
-# PORA Design
+# PORA Design System
 
-## Reference and prompt
+## Direction
 
-Selected: [BudgetZen by chef](https://designmd.ai/chef/budgetzen), listed as MIT on designmd.ai. Reviewed against Warm Teal and Verdana Health; BudgetZen directly fits personal budgeting and mobile use.
+A modern personal wallet: light neutral canvas, a navy balance card, indigo actions, and compact transaction rows. This replaces the earlier BudgetZen treatment after user feedback that it did not feel appealing enough.
 
-The page's prompt:
+## UX research applied
 
-> Using designmd mcp, download the design system https://designmd.ai/chef/budgetzen and implement it in my code
+- [NN/g: Visual hierarchy](https://www.nngroup.com/articles/visual-hierarchy-ux-definition/): make the daily allowance the primary number, the cycle balance secondary, and supporting amounts smaller. Size, grouping, and contrast guide attention.
+- [NN/g: Progressive disclosure](https://www.nngroup.com/articles/progressive-disclosure/): show ordinary tasks first; put editing/deletion in a row menu and storage/calculation details in accordions. Keep amounts and payment actions visible.
+- Explored [VaultLine](https://designmd.ai/chef/vaultline) and [Trust Blue Pay](https://designmd.ai/chef/trust-blue-pay) for finance-oriented alternatives. PORA's implementation uses its own wallet composition rather than copying a banking dashboard or implying live bank connectivity.
 
-The download endpoint was used directly; no MCP installation was needed.
+These are design decisions, not evidence that users prefer this version. User feedback remains the usability acceptance signal.
 
-## Adaptation
+## One component library
 
-Use mint `#10B981`, sky `#38BDF8`, stone `#78716C`, canvas `#FAFFFE`, and white surfaces. Apply rounded cards, subtle elevation, an 8px spacing rhythm, and progressive disclosure. Favor reassuring language and make balances visible at a glance.
+Use **Mantine 9.7.1** throughout. `src/ui.tsx` owns the shared theme and small app adapters. `MantineProvider` and `ModalsProvider` are configured in `src/main.tsx`.
 
-PORA uses darker green for accessible button text/background contrast, a Thai-capable system font for offline operation, 44px minimum touch targets, and tabular money figures. Avoid invented progress targets or savings charts: this app has no goal-tracking data.
+| Interface | Component |
+| --- | --- |
+| Actions and navigation | Button, ActionIcon |
+| Transaction actions | Menu |
+| Text/date/file input | TextInput |
+| Type and date filters | NativeSelect |
+| Panels and balances | Paper |
+| Status and icons | Badge, ThemeIcon, Alert |
+| Help and explanations | Accordion |
+| Forms and confirmations | Modal, ModalsProvider |
+| Typography | Text, Title |
 
-## Component contract
+See [Mantine theming](https://mantine.dev/theming/mantine-provider/) and [Modal accessibility](https://mantine.dev/core/modal/). Ordinary semantic list/layout elements compose these controls; do not introduce a second UI library. Native browser leave-page warnings remain a browser responsibility.
 
-- Overview: one primary amount, daily budget, and distinct spending/income dates. Small cards explain balance, bills, and reserve.
-- Lists: icon tile, name, metadata, amount, and labeled edit/delete actions.
-- Forms: clear labels, prominent amount input, note chips, visible errors, and a full-width save button.
-- Help: concise default copy; calculations, storage caveats, and installation instructions expand on demand.
-- Responsive: desktop sidebar and two-column content; mobile bottom navigation, stacked panels, wrapping actions, and safe-area spacing. Check 320, 390, 768, and 1440px plus long money/name values.
-- Preserve all financial calculations, storage keys, confirmation guards, and PWA behavior.
+## Interaction and layout rules
+
+- Keep Thai-capable system fonts and all UI assets local for offline operation.
+- Preserve integer-satang calculations, Bangkok dates, and personal/sample storage isolation.
+- Use 44px minimum action targets and 48px inputs. Keep labels visible and errors associated with fields.
+- Focus the amount when entering a transaction. Guard unsaved changes; cancel must retain the draft. Escape dismisses the top confirmation, and editor closure restores its initiating action.
+- Desktop: sidebar and two-column content. Mobile: bottom navigation and stacked panels. At 320px, summary amounts become full-width rows.
+- Verify 320, 390, 768, and 1440px, long names, large supported amounts, keyboard navigation, offline writes, and app updates.

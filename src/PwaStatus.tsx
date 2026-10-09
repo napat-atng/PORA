@@ -1,3 +1,5 @@
+import { Alert } from './ui';
+import { Panel, Text, Button } from './ui';
 import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -24,10 +26,10 @@ export function PwaStatus({ hasDraft }: { hasDraft: boolean }) {
     return () => { clearInterval(timer); window.removeEventListener('focus', check); };
   }, []);
   const ready = cached || offlineReady;
-  return <section className="pwa-status" aria-label="สถานะแอป">
+  return <Panel className="pwa-status" aria-label="สถานะแอป">
     <span role="status">{ready ? 'พร้อมใช้ออฟไลน์' : 'กำลังเตรียมออฟไลน์'}</span>
-    {needRefresh && !dismissed && <div className="warning-banner" role="status"><strong>มี PORA เวอร์ชันใหม่</strong><p>{hasDraft ? 'บันทึกหรือปิดฟอร์มก่อนอัปเดต' : 'ข้อมูลที่บันทึกไว้ยังอยู่'}</p><button className="primary" disabled={hasDraft} onClick={() => { void updateServiceWorker().catch(() => setError('อัปเดตไม่สำเร็จ กรุณาลองใหม่')); }}>อัปเดตแอป</button><button onClick={() => setDismissed(true)}>ไว้ภายหลัง</button></div>}
-    {needRefresh && dismissed && <button onClick={() => setDismissed(false)}>ดูการอัปเดตแอป</button>}
-    {error && <p role="alert" className="field-error">{error}{!hasDraft && <button onClick={() => window.location.reload()}>โหลดหน้าใหม่</button>}</p>}
-  </section>;
+    {needRefresh && !dismissed && <Alert className="warning-banner" role="status"><strong>มี PORA เวอร์ชันใหม่</strong><Text component="p">{hasDraft ? 'บันทึกหรือปิดฟอร์มก่อนอัปเดต' : 'ข้อมูลที่บันทึกไว้ยังอยู่'}</Text><Button className="primary" disabled={hasDraft} onClick={() => { void updateServiceWorker().catch(() => setError('อัปเดตไม่สำเร็จ กรุณาลองใหม่')); }}>อัปเดตแอป</Button><Button onClick={() => setDismissed(true)}>ไว้ภายหลัง</Button></Alert>}
+    {needRefresh && dismissed && <Button onClick={() => setDismissed(false)}>ดูการอัปเดตแอป</Button>}
+    {error && <Text component="p" role="alert" className="field-error">{error}{!hasDraft && <Button onClick={() => window.location.reload()}>โหลดหน้าใหม่</Button>}</Text>}
+  </Panel>;
 }
